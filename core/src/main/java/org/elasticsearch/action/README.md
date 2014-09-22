@@ -1,0 +1,1 @@
+We have to use this package because GetResult is non-public. TODO: send a PR.

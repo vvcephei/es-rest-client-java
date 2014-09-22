@@ -5,6 +5,7 @@ import org.elasticsearch.common.base.Optional;
 import org.elasticsearch.common.base.Splitter;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.collect.ImmutableSet;
+import org.elasticsearch.common.collect.Lists;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,12 +46,16 @@ public class UrlBuilder {
         return new UrlBuilder(protocol, host, port, path, query);
     }
 
-    public UrlBuilder path(final String path) {
-        List<String> split = ImmutableList.copyOf(Splitter.on('/').omitEmptyStrings().trimResults().split(path));
-        for (String seg : split) {
-            validateAlphaOr(seg);
+    public UrlBuilder path(final String... path) {
+        List<String> segments = Lists.newArrayList();
+        for (String pathSegment : path) {
+            List<String> split = ImmutableList.copyOf(Splitter.on('/').omitEmptyStrings().trimResults().split(path));
+            for (String seg : split) {
+                validateAlphaOr(seg);
+            }
+            segments.addAll(split);
         }
-        String finalPath = Joiner.on('/').join(split);
+        String finalPath = Joiner.on('/').join(segments);
         return new UrlBuilder(protocol, host, port, finalPath, query);
     }
 
@@ -90,14 +95,15 @@ public class UrlBuilder {
         checkNotNull(host);
         checkNotNull(port);
         checkNotNull(path);
+        String thePath = query == null ? path : path + "?" + query;
         try {
-            return new URL(protocol, host, port, path);
+            return new URL(protocol, host, port, thePath);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }
 
-
+    // FIXME implement the right sanitization here
     private static void validateAlphaOr(String string, Character... allowed) {
         checkNotNull(string);
         ImmutableSet<Character> allowedChars = ImmutableSet.copyOf(allowed);
