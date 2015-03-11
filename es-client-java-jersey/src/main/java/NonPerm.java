@@ -1,28 +1,36 @@
 import com.bazaarvoice.elasticsearch.client.JerseyHttpClient;
-import com.bazaarvoice.elasticsearch.client.core.HttpClient;
-import com.sun.jersey.api.client.Client;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 import java.io.File;
 import java.util.concurrent.Executors;
 
+// A sloppy sandbox for doing quick basic tests on the client
+// This library is in POC state right now. It's a todo to set up a real testing framework.
 public class NonPerm {
+    final static Node node = buildNode();
+
     private static class StartEs {
         public static void main(String[] args) {
-            final Node node = buildNode();
-            final Node start = node.start();
+            node.start();
+        }
+    }
+
+    private static class StopEs {
+        public static void main(String[] args) {
+            node.stop();
         }
     }
 
     public static void main(String[] args) {
 
-        final HttpClient client = JerseyHttpClient.client("http", "localhost", 9800, Client.create(), Executors.newCachedThreadPool());
+        final Client client = JerseyHttpClient.client("http", "localhost", 9800, com.sun.jersey.api.client.Client.create(), Executors.newCachedThreadPool());
 
         System.out.println("INDEX");
 

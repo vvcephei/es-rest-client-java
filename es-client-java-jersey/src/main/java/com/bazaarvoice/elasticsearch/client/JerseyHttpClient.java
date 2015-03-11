@@ -1,8 +1,8 @@
 package com.bazaarvoice.elasticsearch.client;
 
 import com.bazaarvoice.elasticsearch.client.core.HttpClient;
-import com.bazaarvoice.elasticsearch.client.core.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
+import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -19,6 +19,9 @@ import java.net.URL;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * implement the SPIs with the Jersey Http client
+ */
 public class JerseyHttpClient {
 
     private static final Function<ClientResponse, HttpResponse> toHttpResponse = new Function<ClientResponse, HttpResponse>() {
@@ -39,6 +42,8 @@ public class JerseyHttpClient {
         }
 
         @Override public ListenableFuture<HttpResponse> get(final URL url) {
+            // I feel like there's got to be a way to wrap the future with a listenable future, rather than submitting
+            // to an executor. Just being expedient here...
             return executorService.submit(new Callable<HttpResponse>() {
                 @Override public HttpResponse call() throws Exception {
                     return toHttpResponse.apply(toWebResource(url).get(ClientResponse.class));

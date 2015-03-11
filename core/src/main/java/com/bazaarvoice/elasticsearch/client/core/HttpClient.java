@@ -1,5 +1,6 @@
 package com.bazaarvoice.elasticsearch.client.core;
 
+import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -50,8 +51,13 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.util.concurrent.Futures;
-import org.elasticsearch.common.util.concurrent.ListenableFuture;
 
+/**
+ * An implementation of org.elasticsearch.client.Client that uses
+ * the REST+JSON ES api rather than the binary ES transport.
+ * <p/>
+ * This is obviously a work in progress...
+ */
 public class HttpClient extends AbstractClient implements Client {
 
     private final IndexRest indexRest;

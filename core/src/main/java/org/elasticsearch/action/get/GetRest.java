@@ -1,7 +1,7 @@
 package org.elasticsearch.action.get;
 
-import com.bazaarvoice.elasticsearch.client.core.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
+import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.common.base.Function;
@@ -16,11 +16,10 @@ import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.get.GetResult;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
+import static com.bazaarvoice.elasticsearch.client.core.util.InputStreams.stripNulls;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.readBytesReference;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
@@ -70,7 +69,10 @@ public class GetRest {
             try {
                 //TODO check REST status and "ok" field and handle failure
                 Map<String, Object> map = JsonXContent.jsonXContent.createParser(stripNulls(httpResponse.response())).mapAndClose();
-
+                if (map.containsKey("error")) {
+                    // FIXME use the right exception
+                    throw new RuntimeException("Some kind of error: " + map.toString());
+                }
                 final Map<String, GetField> fields;
                 if (map.containsKey("fields")) {
                     Map<String, Object> incoming = requireMap(map.get("fields"), String.class, Object.class);
@@ -99,38 +101,6 @@ public class GetRest {
                 // FIXME: which exception to use? It should match ES clients if possible.
                 throw new RuntimeException(e);
             }
-        }
-
-        private void copy(final InputStream response, final StringWriter stringWriter) {
-            int character;
-            try {
-                while ((character = response.read()) != -1) {
-                    stringWriter.write(character);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } finally {
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        private InputStream stripNulls(final InputStream inputStream) {
-            // ES is adding null characters in the response stream. Not sure why.
-            return new InputStream() {
-                @Override public int read() throws IOException {
-                    int read;
-                    while ((read = inputStream.read()) == 0) {}
-                    return read;
-                }
-
-                @Override public void close() throws IOException {
-                    inputStream.close();
-                }
-            };
         }
     };
 

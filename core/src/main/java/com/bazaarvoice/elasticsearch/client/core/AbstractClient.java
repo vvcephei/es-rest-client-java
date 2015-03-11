@@ -80,9 +80,16 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
 
+/**
+ * The ES client interface provides multiple options for calling each logical method.
+ * This class implements all of them in terms of just one of them, leaving extenders
+ * to implement only one variant.
+ * <p/>
+ * One thing to note is that some methods exist to support thicker es clients.
+ * For example, the transport and node clients do sniffing and round-robining, etc.
+ * The http client, however is a thin client for the poc, so some methods throw or return dummy values
+ */
 public abstract class AbstractClient implements Client {
-
-
     @Override public ActionFuture<IndexResponse> index(final IndexRequest request) {
         PlainActionFuture<IndexResponse> future = new PlainActionFuture<IndexResponse>();
         index(request, future);
