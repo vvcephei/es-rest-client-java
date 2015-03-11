@@ -16,7 +16,7 @@
     <modules>
         <module>parent</module>
         <module>core</module>
-        <module>http</module>
+        <module>es-client-java-jersey</module>
     </modules>
 
 </project>

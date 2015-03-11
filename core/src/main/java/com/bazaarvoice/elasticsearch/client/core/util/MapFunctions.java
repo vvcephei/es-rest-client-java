@@ -24,8 +24,8 @@ public class MapFunctions {
 
     public static long requireLong(@Nullable Object o) {
         Preconditions.checkNotNull(o);
-        if (o instanceof Long) {
-            return (Long) o;
+        if (o instanceof Number){
+            return ((Number)o).longValue();
         } else {
             throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
         }
@@ -82,7 +82,7 @@ public class MapFunctions {
         }
     }
 
-    //TODO test this. also is this really my only option?
+    //TODO test this. also is this really my best option?
     private static byte[] readRaw(final Object source) {
         ByteArrayBuilder byteArrayBuilder = new ByteArrayBuilder();
         try {
@@ -118,6 +118,7 @@ public class MapFunctions {
                 }
                 generator.writeEndObject();
             }
+            generator.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -16,6 +16,8 @@ import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.get.GetResult;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -31,14 +33,29 @@ import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeBo
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
 public class GetRest {
-    public static ListenableFuture<GetResponse> act(HttpExecutor executor, GetRequest request) {
+    private final String protocol;
+    private final String host;
+    private final int port;
+    private final HttpExecutor executor;
+
+    public GetRest(final String protocol, final String host, final int port, final HttpExecutor executor) {
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+
+        this.executor = executor;
+    }
+
+    public ListenableFuture<GetResponse> act(GetRequest request) {
         UrlBuilder url = UrlBuilder.create()
+            .protocol(protocol).host(host).port(port)
             .path(notNull(request.index())).seg(notNull(request.type())).seg(notNull(request.id()))
             .paramIfPresent("refresh", fromNullable(request.refresh()).transform(booleanToString))
             .paramIfPresent("routing", fromNullable(request.routing()))
                 // note parent(string) seems just to set the routing, so we don't need to provide it here
             .paramIfPresent("preference", fromNullable(request.preference()))
             .paramIfPresent("realtime", fromNullable(request.realtime()).transform(booleanToString))
+            .paramIfPresent("ignore_errors_on_generated_fields", fromNullable(request.ignoreErrorsOnGeneratedFields()).transform(booleanToString))
             .paramIfPresent("fields", fromNullable(request.fields()).transform(commaDelimitedToString));
 
         return Futures.transform(executor.get(url.url()), getResponseFunction);
@@ -52,7 +69,7 @@ public class GetRest {
         @Override public GetResponse apply(final HttpResponse httpResponse) {
             try {
                 //TODO check REST status and "ok" field and handle failure
-                Map<String, Object> map = JsonXContent.jsonXContent.createParser(httpResponse.response()).mapAndClose();
+                Map<String, Object> map = JsonXContent.jsonXContent.createParser(stripNulls(httpResponse.response())).mapAndClose();
 
                 final Map<String, GetField> fields;
                 if (map.containsKey("fields")) {
@@ -74,7 +91,7 @@ public class GetRest {
                     requireString(map.get("_type")),
                     requireString(map.get("_id")),
                     nodeLongValue(map.get("_version"), -1),
-                    nodeBooleanValue(map.get("exists"), true),
+                    nodeBooleanValue(map.get("found"), true),
                     readBytesReference(map.get("_source")),
                     fields
                 ));
@@ -82,6 +99,38 @@ public class GetRest {
                 // FIXME: which exception to use? It should match ES clients if possible.
                 throw new RuntimeException(e);
             }
+        }
+
+        private void copy(final InputStream response, final StringWriter stringWriter) {
+            int character;
+            try {
+                while ((character = response.read()) != -1) {
+                    stringWriter.write(character);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        private InputStream stripNulls(final InputStream inputStream) {
+            // ES is adding null characters in the response stream. Not sure why.
+            return new InputStream() {
+                @Override public int read() throws IOException {
+                    int read;
+                    while ((read = inputStream.read()) == 0) {}
+                    return read;
+                }
+
+                @Override public void close() throws IOException {
+                    inputStream.close();
+                }
+            };
         }
     };
 

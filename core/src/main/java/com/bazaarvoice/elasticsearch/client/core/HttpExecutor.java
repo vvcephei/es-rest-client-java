@@ -1,6 +1,5 @@
 package com.bazaarvoice.elasticsearch.client.core;
 
-import org.elasticsearch.action.support.PlainActionFuture;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
 
 import java.io.InputStream;

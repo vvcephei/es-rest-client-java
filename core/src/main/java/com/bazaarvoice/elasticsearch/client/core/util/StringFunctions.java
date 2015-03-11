@@ -3,7 +3,6 @@ package com.bazaarvoice.elasticsearch.client.core.util;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.IgnoreIndices;
 import org.elasticsearch.action.support.replication.ReplicationType;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Joiner;
@@ -26,7 +25,7 @@ public class StringFunctions {
     };
     public static final Function<TimeValue, String> timeValueToString = new Function<TimeValue, String>() {
         @Override public String apply(final TimeValue timeValue) {
-            return timeValue.format();
+            return Long.toString(timeValue.millis());
         }
     };
 
@@ -119,18 +118,5 @@ public class StringFunctions {
         }
     };
 
-    public static final Function<IgnoreIndices, String> ignoreIndicesToString = new Function<IgnoreIndices, String>() {
-        @Override public String apply(final IgnoreIndices ignoreIndices) {
-            switch (ignoreIndices) {
-                case DEFAULT:
-                    throw new IllegalStateException("IgnoreIndices.DEFAULT has not string serialization for some reason..."); // TODO fix this with a PR
-                case MISSING:
-                    return "missing";
-                case NONE:
-                    return "none";
-                default:
-                    throw new IllegalStateException(String.format("unexpected ignore indices %s", ignoreIndices));
-            }
-        }
-    };
+
 }

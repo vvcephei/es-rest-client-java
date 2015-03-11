@@ -7,7 +7,7 @@ import org.elasticsearch.rest.RestRequest;
 
 import java.util.Map;
 
-public class HttpRestRequest implements RestRequest {
+public class HttpRestRequest extends RestRequest {
     @Override public Method method() {
         return null;
     }
@@ -17,10 +17,6 @@ public class HttpRestRequest implements RestRequest {
     }
 
     @Override public String rawPath() {
-        return null;
-    }
-
-    @Override public String path() {
         return null;
     }
 
@@ -39,6 +35,8 @@ public class HttpRestRequest implements RestRequest {
     @Override public String header(final String name) {
         return null;
     }
+
+    @Override public Iterable<Map.Entry<String, String>> headers() { return null; }
 
     @Override public boolean hasParam(final String key) {
         return false;

@@ -1,66 +1,8 @@
 package org.elasticsearch.action.search;
 
-import com.bazaarvoice.elasticsearch.client.core.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.HttpResponse;
-import com.bazaarvoice.elasticsearch.client.core.util.InputStreams;
-import com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder;
-import org.apache.lucene.search.Explanation;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.IgnoreIndices;
-import org.elasticsearch.common.base.Function;
-import org.elasticsearch.common.base.Joiner;
-import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.collect.ImmutableList;
-import org.elasticsearch.common.collect.ImmutableMap;
-import org.elasticsearch.common.collect.Lists;
-import org.elasticsearch.common.text.StringText;
-import org.elasticsearch.common.text.Text;
-import org.elasticsearch.common.util.concurrent.FutureCallback;
-import org.elasticsearch.common.util.concurrent.Futures;
-import org.elasticsearch.common.util.concurrent.ListenableFuture;
-import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.elasticsearch.search.SearchHitField;
-import org.elasticsearch.search.SearchShardTarget;
-import org.elasticsearch.search.facet.Facet;
-import org.elasticsearch.search.facet.InternalFacets;
-import org.elasticsearch.search.facet.datehistogram.DateHistogramFacet;
-import org.elasticsearch.search.facet.datehistogram.InternalCountDateHistogramFacet;
-import org.elasticsearch.search.facet.datehistogram.InternalFullDateHistogramFacet;
-import org.elasticsearch.search.facet.histogram.HistogramFacet;
-import org.elasticsearch.search.facet.histogram.InternalCountHistogramFacet;
-import org.elasticsearch.search.facet.histogram.InternalFullHistogramFacet;
-import org.elasticsearch.search.highlight.HighlightField;
-import org.elasticsearch.search.internal.InternalSearchHit;
-import org.elasticsearch.search.internal.InternalSearchHitField;
-import org.elasticsearch.search.internal.InternalSearchHits;
-import org.elasticsearch.search.internal.InternalSearchResponse;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.readBytesReference;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireString;
-import static com.bazaarvoice.elasticsearch.client.core.util.Rest.findRestStatus;
-import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.ignoreIndicesToString;
-import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.scrollToString;
-import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.searchTypeToString;
-import static org.elasticsearch.common.Preconditions.checkState;
-import static org.elasticsearch.common.base.Optional.fromNullable;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeBooleanValue;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeDoubleValue;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeFloatValue;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
-import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeStringValue;
-
 public class SearchRest {
-    public static ListenableFuture<SearchResponse> act(HttpExecutor executor, SearchRequest request) {
+    // TODO need to revisit this...
+    /*public static ListenableFuture<SearchResponse> act(HttpExecutor executor, SearchRequest request) {
         UrlBuilder url = UrlBuilder.create();
 
         if (request.indices() == null || request.indices().length == 0) {
@@ -377,4 +319,5 @@ public class SearchRest {
                 listener.onFailure(throwable);
             }
         }
-    }
+    }*/
+}

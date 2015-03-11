@@ -31,7 +31,7 @@
     </scm>
 
     <properties>
-        <elasticsearch.version>0.90.7</elasticsearch.version>
+        <elasticsearch.version>1.4.4</elasticsearch.version>
         <slf4j.version>1.7.4</slf4j.version>
     </properties>
 

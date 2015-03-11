@@ -11,7 +11,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>core</artifactId>
+    <artifactId>es-client-java-core</artifactId>
     <packaging>jar</packaging>
     <name>ES Client Core</name>
 

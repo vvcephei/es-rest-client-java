@@ -7,8 +7,10 @@ import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.collect.Lists;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 
 import static org.elasticsearch.common.Preconditions.checkNotNull;
@@ -49,7 +51,7 @@ public class UrlBuilder {
     public UrlBuilder path(final String... path) {
         List<String> segments = Lists.newArrayList();
         for (String pathSegment : path) {
-            List<String> split = ImmutableList.copyOf(Splitter.on('/').omitEmptyStrings().trimResults().split(path));
+            List<String> split = ImmutableList.copyOf(Splitter.on('/').omitEmptyStrings().trimResults().split(pathSegment));
             for (String seg : split) {
                 validateAlphaOr(seg);
             }
@@ -82,7 +84,12 @@ public class UrlBuilder {
         if (value.isPresent()) {
             validateAlphaOr(key);
             validateAlphaOr(value.get());
-            String newParam = key + "=" + value;
+            String newParam = null;
+            try {
+                newParam = URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value.get(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
             String newQuery = query == null ? newParam : query + "&" + newParam;
             return new UrlBuilder(protocol, host, port, path, newQuery);
         } else {
@@ -97,7 +104,7 @@ public class UrlBuilder {
         checkNotNull(path);
         String thePath = query == null ? path : path + "?" + query;
         try {
-            return new URL(protocol, host, port, thePath);
+            return new URL(protocol, host, port, "/"+thePath);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -106,11 +113,12 @@ public class UrlBuilder {
     // FIXME implement the right sanitization here
     private static void validateAlphaOr(String string, Character... allowed) {
         checkNotNull(string);
-        ImmutableSet<Character> allowedChars = ImmutableSet.copyOf(allowed);
-        for (char c : string.toCharArray()) {
-            if (!Character.isAlphabetic(c) && !allowedChars.contains(c)) {
-                throw new IllegalArgumentException(String.format("%s is not allowed in %s", c, string));
-            }
-        }
+        //FIXME
+//        ImmutableSet<Character> allowedChars = ImmutableSet.copyOf(allowed);
+//        for (char c : string.toCharArray()) {
+//            if (!Character.isAlphabetic(c) && !allowedChars.contains(c)) {
+//                throw new IllegalArgumentException(String.format("%s is not allowed in %s", c, string));
+//            }
+//        }
     }
 }

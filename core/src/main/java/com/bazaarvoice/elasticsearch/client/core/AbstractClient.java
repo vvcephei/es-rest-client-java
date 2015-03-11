@@ -18,6 +18,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.exists.ExistsRequest;
+import org.elasticsearch.action.exists.ExistsRequestBuilder;
+import org.elasticsearch.action.exists.ExistsResponse;
 import org.elasticsearch.action.explain.ExplainRequest;
 import org.elasticsearch.action.explain.ExplainRequestBuilder;
 import org.elasticsearch.action.explain.ExplainResponse;
@@ -30,8 +33,20 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptRequest;
+import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptRequestBuilder;
+import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptResponse;
+import org.elasticsearch.action.indexedscripts.get.GetIndexedScriptRequest;
+import org.elasticsearch.action.indexedscripts.get.GetIndexedScriptRequestBuilder;
+import org.elasticsearch.action.indexedscripts.get.GetIndexedScriptResponse;
+import org.elasticsearch.action.indexedscripts.put.PutIndexedScriptRequest;
+import org.elasticsearch.action.indexedscripts.put.PutIndexedScriptRequestBuilder;
+import org.elasticsearch.action.indexedscripts.put.PutIndexedScriptResponse;
 import org.elasticsearch.action.mlt.MoreLikeThisRequest;
 import org.elasticsearch.action.mlt.MoreLikeThisRequestBuilder;
+import org.elasticsearch.action.percolate.MultiPercolateRequest;
+import org.elasticsearch.action.percolate.MultiPercolateRequestBuilder;
+import org.elasticsearch.action.percolate.MultiPercolateResponse;
 import org.elasticsearch.action.percolate.PercolateRequest;
 import org.elasticsearch.action.percolate.PercolateRequestBuilder;
 import org.elasticsearch.action.percolate.PercolateResponse;
@@ -50,11 +65,20 @@ import org.elasticsearch.action.suggest.SuggestRequest;
 import org.elasticsearch.action.suggest.SuggestRequestBuilder;
 import org.elasticsearch.action.suggest.SuggestResponse;
 import org.elasticsearch.action.support.PlainActionFuture;
+import org.elasticsearch.action.termvector.MultiTermVectorsRequest;
+import org.elasticsearch.action.termvector.MultiTermVectorsRequestBuilder;
+import org.elasticsearch.action.termvector.MultiTermVectorsResponse;
+import org.elasticsearch.action.termvector.TermVectorRequest;
+import org.elasticsearch.action.termvector.TermVectorRequestBuilder;
+import org.elasticsearch.action.termvector.TermVectorResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.threadpool.ThreadPool;
 
 public abstract class AbstractClient implements Client {
 
@@ -187,7 +211,7 @@ public abstract class AbstractClient implements Client {
     }
 
     @Override public SearchScrollRequestBuilder prepareSearchScroll(final String scrollId) {
-        return new SearchScrollRequestBuilder(this,scrollId);
+        return new SearchScrollRequestBuilder(this, scrollId);
     }
 
     @Override public ActionFuture<MultiSearchResponse> multiSearch(final MultiSearchRequest request) {
@@ -216,9 +240,7 @@ public abstract class AbstractClient implements Client {
         return future;
     }
 
-    @Override public PercolateRequestBuilder preparePercolate(final String index, final String type) {
-        return new PercolateRequestBuilder(this, index, type);
-    }
+    @Override public PercolateRequestBuilder preparePercolate() { return new PercolateRequestBuilder(this); }
 
     @Override public ExplainRequestBuilder prepareExplain(final String index, final String type, final String id) {
         return new ExplainRequestBuilder(this, index, type, id);
@@ -240,19 +262,96 @@ public abstract class AbstractClient implements Client {
         return future;
     }
 
+    @Override public ActionFuture<PutIndexedScriptResponse> putIndexedScript(final PutIndexedScriptRequest request) {
+        PlainActionFuture<PutIndexedScriptResponse> future = new PlainActionFuture<PutIndexedScriptResponse>();
+        putIndexedScript(request, future);
+        return future;
+    }
+
+    @Override public PutIndexedScriptRequestBuilder preparePutIndexedScript() { return new PutIndexedScriptRequestBuilder(this); }
+
     @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(final Action<Request, Response, RequestBuilder> action, final Request request) {
+    public PutIndexedScriptRequestBuilder preparePutIndexedScript(final String scriptLang, final String id, final String source) { return new PutIndexedScriptRequestBuilder(this).setScriptLang(scriptLang).setId(id).setSource(source); }
+
+    @Override public ActionFuture<DeleteIndexedScriptResponse> deleteIndexedScript(final DeleteIndexedScriptRequest request) {
+        final PlainActionFuture<DeleteIndexedScriptResponse> future = new PlainActionFuture<DeleteIndexedScriptResponse>();
+        deleteIndexedScript(request, future);
+        return future;
+    }
+
+    @Override public DeleteIndexedScriptRequestBuilder prepareDeleteIndexedScript() { return new DeleteIndexedScriptRequestBuilder(this); }
+
+    @Override
+    public DeleteIndexedScriptRequestBuilder prepareDeleteIndexedScript(final String scriptLang, final String id) { return new DeleteIndexedScriptRequestBuilder(this).setScriptLang(scriptLang).setId(id); }
+
+    @Override public ActionFuture<GetIndexedScriptResponse> getIndexedScript(final GetIndexedScriptRequest request) {
+        final PlainActionFuture<GetIndexedScriptResponse> future = new PlainActionFuture<GetIndexedScriptResponse>();
+        getIndexedScript(request, future);
+        return future;
+    }
+
+    @Override public GetIndexedScriptRequestBuilder prepareGetIndexedScript() { return new GetIndexedScriptRequestBuilder(this); }
+
+    @Override
+    public GetIndexedScriptRequestBuilder prepareGetIndexedScript(final String scriptLang, final String id) { return new GetIndexedScriptRequestBuilder(this).setScriptLang(scriptLang).setId(id); }
+
+
+    @Override public ActionFuture<ExistsResponse> exists(final ExistsRequest request) {
+        final PlainActionFuture<ExistsResponse> future = new PlainActionFuture<ExistsResponse>();
+        exists(request, future);
+        return future;
+    }
+
+    @Override public ExistsRequestBuilder prepareExists(final String... indices) { return new ExistsRequestBuilder(this).setIndices(indices); }
+
+    @Override public ActionFuture<TermVectorResponse> termVector(final TermVectorRequest request) {
+        final PlainActionFuture<TermVectorResponse> future = new PlainActionFuture<TermVectorResponse>();
+        termVector(request, future);
+        return future;
+    }
+
+    @Override public TermVectorRequestBuilder prepareTermVector() { return new TermVectorRequestBuilder(this); }
+
+    @Override public TermVectorRequestBuilder prepareTermVector(final String index, final String type, final String id) { return new TermVectorRequestBuilder(this, index, type, id); }
+
+    @Override public ActionFuture<MultiTermVectorsResponse> multiTermVectors(final MultiTermVectorsRequest request) {
+        final PlainActionFuture<MultiTermVectorsResponse> future = new PlainActionFuture<MultiTermVectorsResponse>();
+        multiTermVectors(request, future);
+        return future;
+    }
+
+    @Override public MultiTermVectorsRequestBuilder prepareMultiTermVectors() { return new MultiTermVectorsRequestBuilder(this); }
+
+    @Override public ActionFuture<MultiPercolateResponse> multiPercolate(final MultiPercolateRequest request) {
+        final PlainActionFuture<MultiPercolateResponse> future = new PlainActionFuture<MultiPercolateResponse>();
+        multiPercolate(request, future);
+        return future;
+    }
+
+    @Override public MultiPercolateRequestBuilder prepareMultiPercolate() { return new MultiPercolateRequestBuilder(this); }
+
+
+    @Override
+    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder, Client>> RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, Client> action) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> void execute(final Action<Request, Response, RequestBuilder> action, final Request request, final ActionListener<Response> listener) {
+    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder, Client>> void execute(final Action<Request, Response, RequestBuilder, Client> action, final Request request, final ActionListener<Response> listener) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder> action) {
+    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder, Client>> ActionFuture<Response> execute(final Action<Request, Response, RequestBuilder, Client> action, final Request request) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override public Settings settings() { throw new UnsupportedOperationException(); }
+
+    @Override public ThreadPool threadPool() {
+        final ThreadPool dummyThreadPool = new ThreadPool(ImmutableSettings.builder().build(), null);
+//        throw new UnsupportedOperationException();
+        return dummyThreadPool;
     }
 
 }
