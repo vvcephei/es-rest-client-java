@@ -11,6 +11,8 @@ Most Java projects use either the Node or Transport client or the Jest client. E
 
 The idea of this project is to address both of those concerns by implementing the Client interface and sending requests over HTTP.
 
+See this issue for some background: https://github.com/elastic/elasticsearch/issues/7743
+
 State and Goals
 -----
 
