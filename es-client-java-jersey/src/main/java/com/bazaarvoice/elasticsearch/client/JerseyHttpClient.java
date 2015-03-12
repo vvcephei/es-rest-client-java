@@ -3,11 +3,14 @@ package com.bazaarvoice.elasticsearch.client;
 import com.bazaarvoice.elasticsearch.client.core.HttpClient;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.sun.jersey.api.client.AsyncWebResource;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Throwables;
+import org.elasticsearch.common.lang3.tuple.ImmutablePair;
+import org.elasticsearch.common.lang3.tuple.Pair;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
 import org.elasticsearch.common.util.concurrent.ListeningExecutorService;
 import org.elasticsearch.common.util.concurrent.MoreExecutors;
@@ -16,8 +19,14 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * implement the SPIs with the Jersey Http client
@@ -47,6 +56,14 @@ public class JerseyHttpClient {
             return executorService.submit(new Callable<HttpResponse>() {
                 @Override public HttpResponse call() throws Exception {
                     return toHttpResponse.apply(toWebResource(url).get(ClientResponse.class));
+                }
+            });
+        }
+
+        @Override public ListenableFuture<HttpResponse> delete(final URL url) {
+            return executorService.submit(new Callable<HttpResponse>() {
+                @Override public HttpResponse call() throws Exception {
+                    return toHttpResponse.apply(toWebResource(url).delete(ClientResponse.class));
                 }
             });
         }

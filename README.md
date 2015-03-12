@@ -28,10 +28,10 @@ Implemented:
 
 * get
 * index
+* delete
 
 In Progress:
 
-* delete
 * search
 
 ### HttpExecutor?

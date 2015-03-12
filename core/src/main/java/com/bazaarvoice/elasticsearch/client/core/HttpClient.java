@@ -8,6 +8,7 @@ import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.delete.DeleteRest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.exists.ExistsRequest;
@@ -62,6 +63,7 @@ public class HttpClient extends AbstractClient implements Client {
 
     private final IndexRest indexRest;
     private final GetRest getRest;
+    private final DeleteRest deleteRest;
 
     public static HttpClient withExecutor(String protocol, String host, int port, HttpExecutor executor) {
         return new HttpClient(protocol, host, port, executor);
@@ -70,6 +72,7 @@ public class HttpClient extends AbstractClient implements Client {
     private HttpClient(String protocol, String host, int port, HttpExecutor executor) {
         indexRest = new IndexRest(protocol, host, port, executor);
         getRest = new GetRest(protocol, host, port, executor);
+        deleteRest = new DeleteRest(protocol, host, port, executor);
     }
 
     @Override public void close() {
@@ -82,11 +85,15 @@ public class HttpClient extends AbstractClient implements Client {
     }
 
     @Override public void get(final GetRequest request, final ActionListener<GetResponse> listener) {
-        Futures.addCallback(getRest.act(request), GetRest.callback(listener));
+        Futures.addCallback(getRest.act(request), getRest.callback(listener));
     }
 
     @Override public void index(final IndexRequest request, final ActionListener<IndexResponse> listener) {
-        Futures.addCallback(indexRest.act(request), IndexRest.indexResponseCallback(listener));
+        Futures.addCallback(indexRest.act(request), indexRest.callback(listener));
+    }
+
+    @Override public void delete(final DeleteRequest request, final ActionListener<DeleteResponse> listener) {
+        Futures.addCallback(deleteRest.act(request), deleteRest.callback(listener));
     }
 
     @Override public void search(final SearchRequest request, final ActionListener<SearchResponse> listener) {
@@ -95,10 +102,6 @@ public class HttpClient extends AbstractClient implements Client {
 
 
     @Override public void update(final UpdateRequest request, final ActionListener<UpdateResponse> listener) {
-
-    }
-
-    @Override public void delete(final DeleteRequest request, final ActionListener<DeleteResponse> listener) {
 
     }
 

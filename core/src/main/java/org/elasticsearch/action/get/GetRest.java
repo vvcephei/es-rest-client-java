@@ -3,6 +3,7 @@ package org.elasticsearch.action.get;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder;
+import org.elasticsearch.action.AbstractRestClientAction;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.collect.ImmutableList;
@@ -31,21 +32,12 @@ import static org.elasticsearch.common.base.Optional.fromNullable;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeBooleanValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
-public class GetRest {
-    private final String protocol;
-    private final String host;
-    private final int port;
-    private final HttpExecutor executor;
-
+public class GetRest extends AbstractRestClientAction<GetRequest, GetResponse> {
     public GetRest(final String protocol, final String host, final int port, final HttpExecutor executor) {
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-
-        this.executor = executor;
+        super(protocol, host, port, executor);
     }
 
-    public ListenableFuture<GetResponse> act(GetRequest request) {
+    @Override public ListenableFuture<GetResponse> act(GetRequest request) {
         UrlBuilder url = UrlBuilder.create()
             .protocol(protocol).host(host).port(port)
             .path(notNull(request.index())).seg(notNull(request.type())).seg(notNull(request.id()))
@@ -60,7 +52,7 @@ public class GetRest {
         return Futures.transform(executor.get(url.url()), getResponseFunction);
     }
 
-    public static FutureCallback<GetResponse> callback(ActionListener<GetResponse> listener) {
+    @Override public FutureCallback<GetResponse> callback(ActionListener<GetResponse> listener) {
         return new GetCallback(listener);
     }
 

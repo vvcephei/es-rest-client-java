@@ -1,5 +1,7 @@
 import com.bazaarvoice.elasticsearch.client.JerseyHttpClient;
 import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -9,6 +11,7 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 // A sloppy sandbox for doing quick basic tests on the client
@@ -22,15 +25,10 @@ public class NonPerm {
         }
     }
 
-    private static class StopEs {
-        public static void main(String[] args) {
-            node.stop();
-        }
-    }
-
     public static void main(String[] args) {
 
-        final Client client = JerseyHttpClient.client("http", "localhost", 9800, com.sun.jersey.api.client.Client.create(), Executors.newCachedThreadPool());
+        final ExecutorService executor = Executors.newCachedThreadPool();
+        final Client client = JerseyHttpClient.client("http", "localhost", 9800, com.sun.jersey.api.client.Client.create(), executor);
 
         System.out.println("INDEX");
 
@@ -55,6 +53,17 @@ public class NonPerm {
         System.out.println(get.getVersion());
         System.out.println(get.getSourceAsString());
 
+        System.out.println("DELETE");
+
+        final DeleteRequestBuilder deleteRequestBuilder = client.prepareDelete("testidx", "testtype", "test-id-1");
+        final DeleteResponse deleteResponse = deleteRequestBuilder.execute().actionGet();
+        System.out.println(deleteResponse.getIndex());
+        System.out.println(deleteResponse.getType());
+        System.out.println(deleteResponse.getId());
+        System.out.println(deleteResponse.getVersion());
+        System.out.println(deleteResponse.isFound());
+
+        executor.shutdown();
     }
 
     private static Node buildNode() {
