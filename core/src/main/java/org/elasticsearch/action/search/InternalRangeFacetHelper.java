@@ -1,8 +1,8 @@
 package org.elasticsearch.action.search;
 
-import org.elasticsearch.common.collect.HppcMaps;
 import org.elasticsearch.search.facet.range.InternalRangeFacet;
 import org.elasticsearch.search.facet.range.RangeFacet;
+import org.elasticsearch.search.facet.range.RangeFacetEntryBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,17 @@ public class InternalRangeFacetHelper {
             double to = nodeDoubleValue(range.get("to"), Double.POSITIVE_INFINITY);
             String to_str = nodeStringValue(range.get("to_str"), null);
             long count = nodeLongValue(range.get("count"));
+            long totalCount = nodeLongValue(range.get("total_count"));
+            double total = nodeDoubleValue(range.get("total"));
+            if (totalCount > 0) {
+                double min = nodeDoubleValue(range.get("min"));
+                double max = nodeDoubleValue(range.get("max"));
+                entries[i++] = RangeFacetEntryBuilder.entry(from, from_str, to, to_str, max, min, count, total, totalCount);
+            } else {
+                entries[i++] = RangeFacetEntryBuilder.entry(from, from_str, to, to_str, count, total, totalCount);
+            }
 
         }
-        return new InternalRangeFacet()
+        return new InternalRangeFacet(facetName, entries);
     }
 }

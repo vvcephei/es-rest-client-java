@@ -6,10 +6,10 @@ import org.elasticsearch.search.facet.datehistogram.DateHistogramFacet;
 import org.elasticsearch.search.facet.filter.FilterFacet;
 import org.elasticsearch.search.facet.geodistance.GeoDistanceFacet;
 import org.elasticsearch.search.facet.histogram.HistogramFacet;
-import org.elasticsearch.search.facet.query.InternalQueryFacet;
 import org.elasticsearch.search.facet.query.QueryFacet;
-import org.elasticsearch.search.facet.range.InternalRangeFacet;
+import org.elasticsearch.search.facet.statistical.StatisticalFacet;
 import org.elasticsearch.search.facet.terms.TermsFacet;
+import org.elasticsearch.search.facet.termsstats.InternalTermsStatsFacet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +39,12 @@ public class InternalFacetsHelper {
                 facetsList.add(InternalQueryFacetHelper.fromXContent(facetName, facetMap));
             } else if (type.equals("range")) {
                 facetsList.add(InternalRangeFacetHelper.fromXContent(facetName, facetMap));
+            } else if (type.equals(StatisticalFacet.TYPE)) {
+
+            } else if (type.equals(InternalTermsStatsFacet.TYPE)) {
+
+            } else {
+                throw new IllegalStateException("Unexpected type: " + type);
             }
         }
         return new InternalFacets(facetsList);
