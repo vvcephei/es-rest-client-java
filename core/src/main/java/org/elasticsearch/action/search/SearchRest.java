@@ -132,86 +132,10 @@ public class SearchRest extends AbstractRestClientAction<SearchRequest, SearchRe
 
                 InternalFacets facets = null;
                 if (map.containsKey("facets")) {
-
                     final Map<String, Object> facetsMap = requireMap(map.get("facets"), String.class, Object.class);
-                    final List<Facet> facetsList = new ArrayList<Facet>(facetsMap.size());
-                    for (Map.Entry<String, Object> facetEntry : facetsMap.entrySet()) {
-                        final String facetName = facetEntry.getKey();
-                        final Map<String, Object> facetMap = requireMap(facetEntry.getValue(), String.class, Object.class);
-                        final String type = requireString(facetMap.get("_type"));
-                        if (type.equals(DateHistogramFacet.TYPE)) {
-                            final List<Object> entries = requireList(facetMap.get("entries"), Object.class);
-                            InternalCountDateHistogramFacet.CountEntry[] countEntries = null;
-                            InternalFullDateHistogramFacet.FullEntry[] fullEntries = null;
-                            for (int i = 0; i < entries.size(); i++) {
-                                final Map<String, Object> entryMap = requireMap(entries.get(i), String.class, Object.class);
-                                final long time = nodeLongValue(entryMap.get("time"));
-                                final long count = nodeLongValue(entryMap.get("count"));
-                                final double min = nodeDoubleValue(entryMap.get("min"), Double.NaN);
-                                final double max = nodeDoubleValue(entryMap.get("max"), Double.NaN);
-                                final double total = nodeDoubleValue(entryMap.get("total"), Double.NaN);
-                                final long totalCount = nodeLongValue(entryMap.get("total_count"), 0);
-                                final double mean = nodeDoubleValue(entryMap.get("mean"), Double.NaN);
-                                if (Double.isNaN(min) && Double.isNaN(max) && Double.isNaN(total) && Double.isNaN(mean) && totalCount == 0) {
-                                    checkState(fullEntries == null);
-                                    if (countEntries == null) {
-                                        countEntries = new InternalCountDateHistogramFacet.CountEntry[entries.size()];
-                                    }
-                                    countEntries[i] = new InternalCountDateHistogramFacet.CountEntry(time, count);
-                                } else {
-                                    checkState(countEntries == null);
-                                    if (fullEntries == null) {
-                                        fullEntries = new InternalFullDateHistogramFacet.FullEntry[entries.size()];
-                                    }
-                                    fullEntries[i] = new InternalFullDateHistogramFacet.FullEntry(time, count, min, max, totalCount, total);
-                                }
-                            }
-                            final DateHistogramFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
-                            if (countEntries != null) {
-                                facetsList.add(new InternalCountDateHistogramFacet(facetName, comparatorType, countEntries));
-                            } else {
-                                checkState(fullEntries != null);
-                                assert fullEntries != null;
-                                facetsList.add(new InternalFullDateHistogramFacet(facetName, comparatorType, Arrays.asList(fullEntries)));
-                            }
-                        } else if (type.equals(HistogramFacet.TYPE)) {
-                            final List<Object> entries = requireList(facetMap.get("entries"), Object.class);
-                            InternalCountHistogramFacet.CountEntry[] countEntries = null;
-                            InternalFullHistogramFacet.FullEntry[] fullEntries = null;
-                            for (int i = 0; i < entries.size(); i++) {
-                                final Map<String, Object> entryMap = requireMap(entries.get(i), String.class, Object.class);
-                                final long key = nodeLongValue(entryMap.get("key"));
-                                final long count = nodeLongValue(entryMap.get("count"));
-                                final double min = nodeDoubleValue(entryMap.get("min"), Double.NaN);
-                                final double max = nodeDoubleValue(entryMap.get("max"), Double.NaN);
-                                final double total = nodeDoubleValue(entryMap.get("total"), Double.NaN);
-                                final long totalCount = nodeLongValue(entryMap.get("total_count"), 0);
-                                final double mean = nodeDoubleValue(entryMap.get("mean"), Double.NaN);
-                                if (Double.isNaN(min) && Double.isNaN(max) && Double.isNaN(total) && Double.isNaN(mean) && totalCount == 0) {
-                                    checkState(fullEntries == null);
-                                    if (countEntries == null) {
-                                        countEntries = new InternalCountHistogramFacet.CountEntry[entries.size()];
-                                    }
-                                    countEntries[i] = new InternalCountHistogramFacet.CountEntry(key, count);
-                                } else {
-                                    checkState(countEntries == null);
-                                    if (fullEntries == null) {
-                                        fullEntries = new InternalFullHistogramFacet.FullEntry[entries.size()];
-                                    }
-                                    fullEntries[i] = new InternalFullHistogramFacet.FullEntry(key, count, min, max, totalCount, total);
-                                }
-                            }
-                            final HistogramFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
-                            if (countEntries != null) {
-                                facetsList.add(new InternalCountHistogramFacet(facetName, comparatorType, countEntries));
-                            } else {
-                                checkState(fullEntries != null);
-                                assert fullEntries != null;
-                                facetsList.add(new InternalFullHistogramFacet(facetName, comparatorType, Arrays.asList(fullEntries)));
-                            }
-                        }
-                        facets = new InternalFacets(facetsList);
-                    }
+                    facets = InternalFacetsHelper.fromXContent(facetsMap);
+
+
                 }
                 SearchResponse searchResponse = new SearchResponse(
                     new InternalSearchResponse(
