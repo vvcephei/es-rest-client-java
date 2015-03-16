@@ -40,9 +40,9 @@ public class InternalFacetsHelper {
             } else if (type.equals("range")) {
                 facetsList.add(InternalRangeFacetHelper.fromXContent(facetName, facetMap));
             } else if (type.equals(StatisticalFacet.TYPE)) {
-
+                facetsList.add(InternalStatisticalFacetHelper.fromXContent(facetName, facetMap));
             } else if (type.equals(InternalTermsStatsFacet.TYPE)) {
-
+                facetsList.add(InternalTermsStatsFacetHelper.fromXContent(facetName, facetMap));
             } else {
                 throw new IllegalStateException("Unexpected type: " + type);
             }

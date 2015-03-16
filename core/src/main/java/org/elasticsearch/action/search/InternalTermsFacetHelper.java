@@ -40,7 +40,7 @@ public class InternalTermsFacetHelper {
                 stringEntries.add(new InternalStringTermsFacet.TermEntry((String) actualTerm, count));
             } else if (actualTerm instanceof Long || actualTerm instanceof Integer) {
                 if (longEntries == null) {longEntries = new ArrayList<InternalLongTermsFacet.LongEntry>(terms.size());}
-                longEntries.add(new InternalLongTermsFacet.LongEntry((Long) actualTerm, count));
+                longEntries.add(new InternalLongTermsFacet.LongEntry(nodeLongValue(actualTerm), count));
             } else {
                 throw new IllegalArgumentException("unexpected facet term type " + actualTerm.getClass() + " term: " + actualTerm);
             }
