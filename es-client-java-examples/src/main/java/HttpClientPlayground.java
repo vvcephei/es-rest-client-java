@@ -16,12 +16,16 @@ import java.util.concurrent.Executors;
 
 // A sloppy sandbox for doing quick basic tests on the client
 // This library is in POC state right now. It's a todo to set up a real testing framework.
-public class NonPerm {
-    final static Node node = buildNode();
-
+public class HttpClientPlayground {
     private static class StartEs {
         public static void main(String[] args) {
+            final Node node = buildNode();
             node.start();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override public void run() {
+                    node.stop();
+                }
+            });
         }
     }
 

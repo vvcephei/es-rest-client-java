@@ -5,7 +5,7 @@
     <parent>
     <groupId>com.bazaarvoice.elasticsearch.client</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1PRE1-SNAPSHOT</version>
         <relativePath>./parent/pom.xml</relativePath>
     </parent>
 
@@ -17,6 +17,7 @@
         <module>parent</module>
         <module>core</module>
         <module>es-client-java-jersey</module>
+        <module>es-client-java-examples</module>
     </modules>
 
 </project>

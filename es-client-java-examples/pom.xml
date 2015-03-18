@@ -11,9 +11,9 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>es-client-java-jersey</artifactId>
+    <artifactId>es-client-java-examples</artifactId>
     <packaging>jar</packaging>
-    <name>ES Client Http Client</name>
+    <name>ES Client Http Client Examples</name>
 
     <properties>
         <jersey-client.version>1.17.1</jersey-client.version>
@@ -21,13 +21,8 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>es-client-java-core</artifactId>
+            <artifactId>es-client-java-jersey</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${jersey-client.version}</version>
         </dependency>
     </dependencies>
 </project>

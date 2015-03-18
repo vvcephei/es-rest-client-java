@@ -8,6 +8,7 @@ import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.delete.DeleteResponseTransform;
 import org.elasticsearch.action.delete.DeleteRest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
@@ -17,11 +18,13 @@ import org.elasticsearch.action.explain.ExplainRequest;
 import org.elasticsearch.action.explain.ExplainResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.GetResponseTransform;
 import org.elasticsearch.action.get.GetRest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.index.IndexResponseTransform;
 import org.elasticsearch.action.index.IndexRest;
 import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptRequest;
 import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptResponse;
@@ -40,6 +43,8 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchResponseTransform;
+import org.elasticsearch.action.search.SearchRest;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.suggest.SuggestRequest;
 import org.elasticsearch.action.suggest.SuggestResponse;
@@ -61,22 +66,24 @@ import org.elasticsearch.common.util.concurrent.Futures;
  */
 public class HttpClient extends AbstractClient implements Client {
 
-    private final IndexRest indexRest;
-    private final GetRest getRest;
-    private final DeleteRest deleteRest;
+    private final IndexRest<IndexResponse> indexRest;
+    private final GetRest<GetResponse> getRest;
+    private final DeleteRest<DeleteResponse> deleteRest;
+    private final SearchRest<SearchResponse> searchRest;
 
-    public static HttpClient withExecutor(String protocol, String host, int port, HttpExecutor executor) {
+    public static HttpClient withExecutor(final String protocol, final String host, final int port, final HttpExecutor executor) {
         return new HttpClient(protocol, host, port, executor);
     }
 
-    private HttpClient(String protocol, String host, int port, HttpExecutor executor) {
-        indexRest = new IndexRest(protocol, host, port, executor);
-        getRest = new GetRest(protocol, host, port, executor);
-        deleteRest = new DeleteRest(protocol, host, port, executor);
+    private HttpClient(final String protocol, final String host, final int port, final HttpExecutor executor) {
+        indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new IndexResponseTransform());
+        getRest = new GetRest<GetResponse>(protocol, host, port, executor, new GetResponseTransform());
+        deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new DeleteResponseTransform());
+        searchRest = new SearchRest<SearchResponse>(protocol, host, port, executor, new SearchResponseTransform());
     }
 
     @Override public void close() {
-        // TODO: consider whether we need to close the executor or just let the provider manage its lifecycle independently
+        // nothing to close at the moment
     }
 
     @Override public AdminClient admin() {
@@ -97,7 +104,7 @@ public class HttpClient extends AbstractClient implements Client {
     }
 
     @Override public void search(final SearchRequest request, final ActionListener<SearchResponse> listener) {
-
+        Futures.addCallback(searchRest.act(request), searchRest.callback(listener));
     }
 
 
