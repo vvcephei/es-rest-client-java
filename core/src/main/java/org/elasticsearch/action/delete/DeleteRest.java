@@ -17,6 +17,11 @@ import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.wri
 import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
+/**
+ * The inverse of {@link org.elasticsearch.rest.action.delete.RestDeleteAction}
+ *
+ * @param <ResponseType>
+ */
 public class DeleteRest<ResponseType> extends AbstractRestClientAction<DeleteRequest, ResponseType> {
 
     public DeleteRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, ResponseType> responseTransform) {

@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.search.facet.Facet;
 import org.elasticsearch.search.facet.InternalFacets;
@@ -15,21 +15,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireString;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeStringValue;
 
 public class InternalFacetsHelper {
     public static InternalFacets fromXContent(final Map<String, Object> map) {
         if (!map.containsKey("facets")) {
             return null;
         }
-        final Map<String, Object> content = requireMap(map.get("facets"), String.class, Object.class);
+        final Map<String, Object> content = nodeMapValue(map.get("facets"), String.class, Object.class);
 
         final List<Facet> facetsList = new ArrayList<Facet>(content.size());
         for (Map.Entry<String, Object> facetEntry : content.entrySet()) {
             final String facetName = facetEntry.getKey();
-            final Map<String, Object> facetMap = requireMap(facetEntry.getValue(), String.class, Object.class);
-            final String type = requireString(facetMap.get("_type"));
+            final Map<String, Object> facetMap = nodeMapValue(facetEntry.getValue(), String.class, Object.class);
+            final String type = nodeStringValue(facetMap.get("_type"));
             if (type.equals(DateHistogramFacet.TYPE)) {
                 facetsList.add(InternalDateHistogramFacetHelper.fromXContent(facetName, facetMap));
             } else if (type.equals(HistogramFacet.TYPE)) {

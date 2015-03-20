@@ -16,6 +16,10 @@ import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.scr
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.searchTypeToString;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
+/**
+ * The inverse of {@link org.elasticsearch.rest.action.search.RestSearchAction}
+ * @param <ResponseType>
+ */
 public class SearchRest<ResponseType> extends AbstractRestClientAction<SearchRequest, ResponseType> {
     public SearchRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, ResponseType> responseTransform) {
         super(protocol, host, port, executor, responseTransform);

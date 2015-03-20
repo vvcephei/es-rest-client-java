@@ -10,6 +10,10 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.search.Scroll;
 
+/**
+ * Various transforms from ES types to strings. Arguably, these belong
+ * next to the types they transform in the ES code.
+ */
 public class StringFunctions {
     public static final Function<IndexRequest.OpType, String> opTypeToString = new Function<IndexRequest.OpType, String>() {
         @Override public String apply(final IndexRequest.OpType o) {

@@ -13,6 +13,10 @@ import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.com
 import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
+/**
+ * The inverse of {@link org.elasticsearch.rest.action.get.RestGetAction}
+ * @param <ResponseType>
+ */
 public class GetRest<ResponseType> extends AbstractRestClientAction<GetRequest, ResponseType> {
     public GetRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, ResponseType> responseTransform) {
         super(protocol, host, port, executor, responseTransform);

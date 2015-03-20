@@ -2,13 +2,14 @@ package com.bazaarvoice.elasticsearch.client.core;
 
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.XContentResponseTransform;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.delete.DeleteResponseTransform;
+import org.elasticsearch.action.delete.DeleteResponseHelper;
 import org.elasticsearch.action.delete.DeleteRest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
@@ -18,13 +19,13 @@ import org.elasticsearch.action.explain.ExplainRequest;
 import org.elasticsearch.action.explain.ExplainResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.GetResponseTransform;
+import org.elasticsearch.action.get.GetResponseHelper;
 import org.elasticsearch.action.get.GetRest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.index.IndexResponseTransform;
+import org.elasticsearch.action.index.IndexResponseHelper;
 import org.elasticsearch.action.index.IndexRest;
 import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptRequest;
 import org.elasticsearch.action.indexedscripts.delete.DeleteIndexedScriptResponse;
@@ -43,7 +44,7 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchResponseTransform;
+import org.elasticsearch.action.search.SearchResponseHelper;
 import org.elasticsearch.action.search.SearchRest;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.suggest.SuggestRequest;
@@ -58,11 +59,16 @@ import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.util.concurrent.Futures;
 
+import static org.elasticsearch.action.NotifyingCallback.callback;
+
 /**
  * An implementation of org.elasticsearch.client.Client that uses
  * the REST+JSON ES api rather than the binary ES transport.
  * <p/>
- * This is obviously a work in progress...
+ * This client does NOT have an opinion about how requests will be
+ * sent over the wire. It delegates that responsibility to whatever
+ * implementation of {@link com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor}
+ * you choose to supply.
  */
 public class HttpClient extends AbstractClient implements Client {
 
@@ -76,10 +82,10 @@ public class HttpClient extends AbstractClient implements Client {
     }
 
     private HttpClient(final String protocol, final String host, final int port, final HttpExecutor executor) {
-        indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new IndexResponseTransform());
-        getRest = new GetRest<GetResponse>(protocol, host, port, executor, new GetResponseTransform());
-        deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new DeleteResponseTransform());
-        searchRest = new SearchRest<SearchResponse>(protocol, host, port, executor, new SearchResponseTransform());
+        indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new XContentResponseTransform<IndexResponse>(new IndexResponseHelper()));
+        getRest = new GetRest<GetResponse>(protocol, host, port, executor, new XContentResponseTransform<GetResponse>(new GetResponseHelper()));
+        deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new XContentResponseTransform<DeleteResponse>(new DeleteResponseHelper()));
+        searchRest = new SearchRest<SearchResponse>(protocol, host, port, executor, new XContentResponseTransform<SearchResponse>(new SearchResponseHelper()));
     }
 
     @Override public void close() {
@@ -92,19 +98,19 @@ public class HttpClient extends AbstractClient implements Client {
     }
 
     @Override public void get(final GetRequest request, final ActionListener<GetResponse> listener) {
-        Futures.addCallback(getRest.act(request), getRest.callback(listener));
+        Futures.addCallback(getRest.act(request), callback(listener));
     }
 
     @Override public void index(final IndexRequest request, final ActionListener<IndexResponse> listener) {
-        Futures.addCallback(indexRest.act(request), indexRest.callback(listener));
+        Futures.addCallback(indexRest.act(request), callback(listener));
     }
 
     @Override public void delete(final DeleteRequest request, final ActionListener<DeleteResponse> listener) {
-        Futures.addCallback(deleteRest.act(request), deleteRest.callback(listener));
+        Futures.addCallback(deleteRest.act(request), callback(listener));
     }
 
     @Override public void search(final SearchRequest request, final ActionListener<SearchResponse> listener) {
-        Futures.addCallback(searchRest.act(request), searchRest.callback(listener));
+        Futures.addCallback(searchRest.act(request), callback(listener));
     }
 
 

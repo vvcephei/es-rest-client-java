@@ -21,6 +21,10 @@ import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 import static org.elasticsearch.common.base.Optional.of;
 
+/**
+ * The inverse of {@link org.elasticsearch.rest.action.index.RestIndexAction}
+ * @param <ResponseType>
+ */
 public class IndexRest<ResponseType> extends AbstractRestClientAction<IndexRequest, ResponseType> {
     public IndexRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, ResponseType> responseTransform) {
         super(protocol, host, port, executor, responseTransform);

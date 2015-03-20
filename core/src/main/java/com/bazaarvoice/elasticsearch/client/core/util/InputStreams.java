@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 
+/**
+ * Convenience class for handling {@link com.bazaarvoice.elasticsearch.client.core.util.InputStreams}
+ */
 public class InputStreams {
     public static InputStream of(BytesReference bytes) {
         return new ByteArrayInputStream(bytes.array());
@@ -33,7 +36,7 @@ public class InputStreams {
     }
 
     /** sometimes the response comes back with nulls in the string. As far as I can tell, we just want to strip them out... */
-    public static InputStream stripNulls(final InputStream inputStream) {
+    public static InputStream stripNullChars(final InputStream inputStream) {
         return new InputStream() {
             @Override public int read() throws IOException {
                 int read;

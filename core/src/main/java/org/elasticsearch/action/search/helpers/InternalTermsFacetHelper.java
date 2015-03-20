@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.facet.terms.doubles.InternalDoubleTermsFacet;
@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.Preconditions.checkNotNull;
 import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
@@ -19,16 +19,17 @@ import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLo
 
 public class InternalTermsFacetHelper {
     public static TermsFacet fromXContent(final String facetName, final Map<String, Object> facetMap) {
-        final TermsFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
+        // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null. see https://github.com/bazaarvoice/es-client-java/issues/9
+        final TermsFacet.ComparatorType comparatorType = null;
         final long missing = nodeLongValue(facetMap.get("missing"));
         final long total = nodeLongValue(facetMap.get("total"));
         final long otherCount = nodeLongValue(facetMap.get("other"));
         Collection<InternalDoubleTermsFacet.DoubleEntry> doubleEntries = null;
         Collection<InternalStringTermsFacet.TermEntry> stringEntries = null;
         Collection<InternalLongTermsFacet.LongEntry> longEntries = null;
-        final List<Object> terms = requireList(facetMap.get("terms"), Object.class);
+        final List<Object> terms = nodeListValue(facetMap.get("terms"), Object.class);
         for (Object term : terms) {
-            final Map<String, Object> termMap = requireMap(term, String.class, Object.class);
+            final Map<String, Object> termMap = nodeMapValue(term, String.class, Object.class);
             final int count = nodeIntegerValue(termMap.get("count"));
             final Object actualTerm = termMap.get("term");
             checkNotNull(actualTerm);

@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.common.Preconditions;
 import org.elasticsearch.common.collect.ImmutableList;
@@ -13,22 +13,25 @@ import org.elasticsearch.search.suggest.Suggest.Suggestion.Entry.Option;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireFloat;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireInt;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireString;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeStringValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeBooleanValue;
+import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeFloatValue;
+import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeStringValue;
 
 public class SuggestHelper {
     public static Suggest fromXContent(final Map<String, Object> map) {
-        // weirdly, the suggestions will be in a "suggest" field,
-        // but I don't see that being written in the 1.4.4 code
+        // weirdly, the documentation claims that
+        // the suggestions will be in a "suggest" field,
+        // but I don't see that being written in the 1.4.4 code.
+        // my hypothesis is that the "name" (below) of the top-level
+        // Suggest is "suggest".
         if (!map.containsKey("suggest")) {
             return null;
         }
-        Map<String, Object> suggest = requireMap(map.get("suggest"), String.class, Object.class);
+        Map<String, Object> suggest = nodeMapValue(map.get("suggest"), String.class, Object.class);
         if (suggest.isEmpty()) {
             return new Suggest(ImmutableList.<Suggestion<? extends Entry<? extends Option>>>of());
         }
@@ -38,9 +41,9 @@ public class SuggestHelper {
         if (first.getValue() instanceof List) {
             // then the suggest object was anonymous, and we need to iterate over the suggestions
             final List<Suggestion<? extends Entry<? extends Option>>> suggestions = Lists.newArrayList();
-            Map<String, Object> namedSuggestions = requireMap(suggest, String.class, Object.class);
+            Map<String, Object> namedSuggestions = nodeMapValue(suggest, String.class, Object.class);
             for (Map.Entry<String, Object> namedSuggestion : namedSuggestions.entrySet()) {
-                suggestions.add(SuggestionHelper.fromXContent(namedSuggestion.getKey(), requireList(namedSuggestion.getValue(), Object.class)));
+                suggestions.add(SuggestionHelper.fromXContent(namedSuggestion.getKey(), nodeListValue(namedSuggestion.getValue(), Object.class)));
             }
             return new Suggest(null, suggestions);
         } else {
@@ -48,9 +51,9 @@ public class SuggestHelper {
             // then the suggest object had a name
             final String name = first.getKey();
             final List<Suggestion<? extends Entry<? extends Option>>> suggestions = Lists.newArrayList();
-            Map<String, Object> namedSuggestions = requireMap(first.getValue(), String.class, Object.class);
+            Map<String, Object> namedSuggestions = nodeMapValue(first.getValue(), String.class, Object.class);
             for (Map.Entry<String, Object> namedSuggestion : namedSuggestions.entrySet()) {
-                suggestions.add(SuggestionHelper.fromXContent(namedSuggestion.getKey(), requireList(namedSuggestion.getValue(), Object.class)));
+                suggestions.add(SuggestionHelper.fromXContent(namedSuggestion.getKey(), nodeListValue(namedSuggestion.getValue(), Object.class)));
             }
             return new Suggest(new XContentBuilderString(name), suggestions);
         }
@@ -65,7 +68,7 @@ public class SuggestHelper {
         public static Suggestion<? extends Entry<? extends Option>> fromXContent(final String name, final List<Object> entryObjs) {
             Suggestion<Entry<? extends Option>> suggestion = new Suggestion<Entry<? extends Option>>(name, -1/*Internal field. not needed.*/);
             for (Object entryObj : entryObjs) {
-                suggestion.addTerm(EntryHelper.fromXContent(requireMap(entryObj, String.class, Object.class)));
+                suggestion.addTerm(EntryHelper.fromXContent(nodeMapValue(entryObj, String.class, Object.class)));
             }
             return suggestion;
 
@@ -74,10 +77,10 @@ public class SuggestHelper {
 
     private static class EntryHelper {
         public static Entry<? extends Option> fromXContent(final Map<String, Object> map) {
-            Entry<Option> entry = new Entry<Option>(new StringText(requireString(map.get("text"))), requireInt(map.get("offset")), requireInt(map.get("length")));
-            List<Object> optionObjs = requireList(map.get("options"), Object.class);
+            Entry<Option> entry = new Entry<Option>(new StringText(nodeStringValue(map.get("text"))), nodeIntegerValue(map.get("offset")), nodeIntegerValue(map.get("length")));
+            List<Object> optionObjs = nodeListValue(map.get("options"), Object.class);
             for (Object optionObj : optionObjs) {
-                entry.addOption(OptionHelper.fromXContent(requireMap(optionObj, String.class, Object.class)));
+                entry.addOption(OptionHelper.fromXContent(nodeMapValue(optionObj, String.class, Object.class)));
             }
             return entry;
         }
@@ -86,9 +89,9 @@ public class SuggestHelper {
     private static class OptionHelper {
 
         public static Option fromXContent(final Map<String, Object> map) {
-            final String text = requireString(map.get("text"));
+            final String text = nodeStringValue(map.get("text"));
             final /*nullable*/ String highlighted = nodeStringValue(map.get("highlighted"), null);
-            final float score = requireFloat(map.get("score"));
+            final float score = nodeFloatValue(map.get("score"));
             final /*nullable*/ Boolean collateMatch = map.containsKey("collate_match") ? nodeBooleanValue(map.get("collate_match")) : null;
             return new Option(new StringText(text), new StringText(highlighted), score, collateMatch);
         }

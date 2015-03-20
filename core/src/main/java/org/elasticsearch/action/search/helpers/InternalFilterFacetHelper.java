@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.search.facet.filter.FilterFacet;
 import org.elasticsearch.search.facet.filter.InternalFilterFacet;

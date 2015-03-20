@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.io.stream.StreamInput;
@@ -19,11 +19,12 @@ public class InternalAggregationsHelper {
             return new InternalAggregations(ImmutableList.<InternalAggregation>of());
         }
 
-        //FIXME toXContent needs to serialize the type of the aggregations. We /could/
-        //FIXME perform read-time coersion to get around this (but it would be messy),
-        //FIXME but the api doesn't even return enough information to reconstruct the internal aggregation objects.
-        //FIXME for example, an average aggregation returns only the average, but the
-        //FIXME java object needs the sum and count in the constructor.
+        // FIXME TO_PR make the api return enough info to deserialize the Aggregations. see https://github.com/bazaarvoice/es-client-java/issues/5
+        // toXContent needs to serialize the type of the aggregations. We /could/
+        // perform read-time coersion to get around this (but it would be messy),
+        // but the api doesn't even return enough information to reconstruct the internal aggregation objects.
+        // for example, an average aggregation returns only the average, but the
+        // java object needs the sum and count in the constructor.
         return new NotImplementedInternalAggregations();
     }
 
@@ -33,17 +34,16 @@ public class InternalAggregationsHelper {
         }
     }
 
+    /**
+     * A special Aggregations implementation that informs you that Aggregations is not implemented
+     */
     private static class NotImplementedInternalAggregations extends InternalAggregations {
 
         private final NotImplementedException EXCEPTION = new NotImplementedException("Aggregations is not implementable given the current format of the json responses. The ES api needs to serialize the type of the aggregation as well as enough information to construct aggregation objects from the json. Both of these conditions are currently unmet.");
 
-        /**
-         * Constructs a new addAggregation.
-         */
         public NotImplementedInternalAggregations() {
             super(null);
         }
-
 
         public NotImplementedInternalAggregations(final List<InternalAggregation> aggregations) {
             super(null);

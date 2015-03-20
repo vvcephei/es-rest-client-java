@@ -1,4 +1,4 @@
-import com.bazaarvoice.elasticsearch.client.JerseyHttpClient;
+import com.bazaarvoice.elasticsearch.client.JerseyHttpClientFactory;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -22,9 +22,22 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// A sloppy sandbox for doing quick basic tests on the client
-// This library is in POC state right now. It's a todo to set up a real testing framework.
+/**
+ * A sloppy sandbox for doing quick basic tests on the client
+ * <p/>
+ * TODO: set up a real testing framework. See https://github.com/bazaarvoice/es-client-java/issues/10
+ * <p/>
+ * How to use:
+ * First run {@link HttpClientPlayground.StartEs#main(String[])}, and leave it running.
+ * Then, you can run {@link HttpClientPlayground#main(String[])} as many times as you please.
+ */
 public class HttpClientPlayground {
+
+    private static final String protocol = "http";
+    private static final String host = "localhost";
+    private static final int port = 9800;
+    private static final String esDataDirectory = "/tmp/john-test-cluster";
+
     private static class StartEs {
         public static void main(String[] args) {
             final Node node = buildNode();
@@ -40,7 +53,7 @@ public class HttpClientPlayground {
     public static void main(String[] args) {
 
         final ExecutorService executor = Executors.newCachedThreadPool();
-        final Client client = JerseyHttpClient.client("http", "localhost", 9800, com.sun.jersey.api.client.Client.create(), executor);
+        final Client client = JerseyHttpClientFactory.client(protocol, host, port, com.sun.jersey.api.client.Client.create(), executor);
 
         System.out.println("INDEX");
 
@@ -128,11 +141,11 @@ public class HttpClientPlayground {
     private static Node buildNode() {
         final NodeBuilder nodeBuilder = NodeBuilder.nodeBuilder();
         nodeBuilder.settings().put("cluster.name", "test cluster");
-        nodeBuilder.settings().put("http.port", "9800");
+        nodeBuilder.settings().put("http.port", Integer.toString(port));
         nodeBuilder.settings().put("transport.tcp.port", "9801");
         nodeBuilder.settings().put("network.publish_host", "_local_"); // we're for local testing, don't allow discovery on public ip
         nodeBuilder.settings().put("gateway.type", "none");
-        final File homeDirectory = new File("/tmp/john-test-cluster");
+        final File homeDirectory = new File(esDataDirectory);
         nodeBuilder.settings().put("path.home", homeDirectory.getPath());
         nodeBuilder.settings().put("path.logs", new File(homeDirectory, "logs").getPath());
         nodeBuilder.settings().put("index.number_of_replicas", 0);

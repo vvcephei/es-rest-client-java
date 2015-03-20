@@ -2,11 +2,16 @@ package org.elasticsearch.action;
 
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.common.base.Function;
-import org.elasticsearch.common.util.concurrent.FutureCallback;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
 
+/**
+ * Abstracts the function of taking some kind of ES request, sending it
+ * and returning a future of the response.
+ *
+ * @param <Request>  the request type to send
+ * @param <Response> the response type to return
+ */
 public abstract class AbstractRestClientAction<Request, Response> {
     protected final String protocol;
     protected final String host;
@@ -23,9 +28,11 @@ public abstract class AbstractRestClientAction<Request, Response> {
         this.responseTransform = responseTransform;
     }
 
+    /**
+     * Asynchronously execute the request
+     *
+     * @param request the request to send
+     * @return a future of the response
+     */
     public abstract ListenableFuture<Response> act(Request request);
-
-    public FutureCallback<Response> callback(ActionListener<Response> listener) {
-        return new NotifyingCallback<Response>(listener);
-    }
 }

@@ -12,53 +12,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A few functions I needed similar to, but missing from,
+ * {@link org.elasticsearch.common.xcontent.support.XContentMapValues}
+ */
 public class MapFunctions {
-    public static String requireString(@Nullable Object o) {
+    public static String nodeStringValue(@Nullable Object o) {
         Preconditions.checkNotNull(o);
         if (o instanceof String) {
             return (String) o;
         } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a string but was %s", o, o.getClass()));
+            return o.toString();
         }
     }
 
-    public static int requireInt(@Nullable Object o) {
-        Preconditions.checkNotNull(o);
-        if (o instanceof Number){
-            return ((Number)o).intValue();
-        } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
-        }
-    }
-
-    public static long requireLong(@Nullable Object o) {
-        Preconditions.checkNotNull(o);
-        if (o instanceof Number){
-            return ((Number)o).longValue();
-        } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
-        }
-    }
-
-    public static float requireFloat(@Nullable Object o) {
-        Preconditions.checkNotNull(o);
-        if (o instanceof Number){
-            return ((Number)o).floatValue();
-        } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
-        }
-    }
-
-    public static boolean requireBoolean(@Nullable Object o) {
-        Preconditions.checkNotNull(o);
-        if (o instanceof Boolean) {
-            return (Boolean) o;
-        } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a boolean but was %s", o, o.getClass()));
-        }
-    }
-
-    public static <T> List<T> requireList(@Nullable Object o, Class<T> contains) {
+    public static <T> List<T> nodeListValue(@Nullable Object o, Class<T> contains) {
         Preconditions.checkNotNull(o);
         if (o instanceof List) {
             for (Object elem : (List) o) {
@@ -73,7 +41,7 @@ public class MapFunctions {
         }
     }
 
-    public static <K, V> Map<K, V> requireMap(final Object o, final Class<K> keyClass, final Class<V> valueClass) {
+    public static <K, V> Map<K, V> nodeMapValue(final Object o, final Class<K> keyClass, final Class<V> valueClass) {
         Preconditions.checkNotNull(o);
         if (o instanceof Map) {
             for (Object entry : ((Map) o).entrySet()) {
@@ -94,7 +62,7 @@ public class MapFunctions {
         }
     }
 
-    public static BytesReference readBytesReference(final @Nullable Object o) {
+    public static BytesReference nodeBytesReferenceValue(final @Nullable Object o) {
         if (o == null) {
             return null;
         } else {
@@ -124,14 +92,14 @@ public class MapFunctions {
             } else if (source instanceof String) {
                 generator.writeString((String) source);
             } else if (source instanceof List) {
-                List<Object> objects = requireList(source, Object.class);
+                List<Object> objects = nodeListValue(source, Object.class);
                 generator.writeStartArray();
                 for (Object o : objects) {
                     generator.writeBinary(readRaw(o));
                 }
                 generator.writeEndArray();
             } else if (source instanceof Map) {
-                Map<String, Object> map = requireMap(source, String.class, Object.class);
+                Map<String, Object> map = nodeMapValue(source, String.class, Object.class);
                 generator.writeStartObject();
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
                     generator.writeRawField(entry.getKey(), readRaw(entry.getValue()), byteArrayBuilder);

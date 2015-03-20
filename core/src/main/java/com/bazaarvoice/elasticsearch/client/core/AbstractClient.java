@@ -85,9 +85,9 @@ import org.elasticsearch.threadpool.ThreadPool;
  * This class implements all of them in terms of just one of them, leaving extenders
  * to implement only one variant.
  * <p/>
- * One thing to note is that some methods exist to support thicker es clients.
- * For example, the transport and node clients do sniffing and round-robining, etc.
- * The http client, however is a thin client for the poc, so some methods throw or return dummy values
+ * Note that there are some TODOS (settings and threadPool)
+ * Note also that execute don't need to be called from clients, and they complicate
+ * matters, so they will throw an UnsupportedOperationException
  */
 public abstract class AbstractClient implements Client {
     @Override public ActionFuture<IndexResponse> index(final IndexRequest request) {
@@ -353,12 +353,16 @@ public abstract class AbstractClient implements Client {
         throw new UnsupportedOperationException();
     }
 
-    @Override public Settings settings() { throw new UnsupportedOperationException(); }
+    @Override public Settings settings() {
+        // TODO flesh out client
+        throw new NotImplementedException();
+    }
 
     @Override public ThreadPool threadPool() {
+        // TODO flesh out client
         final ThreadPool dummyThreadPool = new ThreadPool(ImmutableSettings.builder().build(), null);
-//        throw new UnsupportedOperationException();
         return dummyThreadPool;
     }
 
+    private class NotImplementedException extends RuntimeException {}
 }

@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.search.facet.histogram.HistogramFacet;
 import org.elasticsearch.search.facet.histogram.InternalCountHistogramFacet;
@@ -8,19 +8,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeDoubleValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
 public class InternalHistogramFacetHelper {
     public static HistogramFacet fromXContent(final String facetName, final Map<String, Object> facetMap) {
-        final List<Object> entries = requireList(facetMap.get("entries"), Object.class);
+        final List<Object> entries = nodeListValue(facetMap.get("entries"), Object.class);
         InternalCountHistogramFacet.CountEntry[] countEntries = null;
         InternalFullHistogramFacet.FullEntry[] fullEntries = null;
         for (int i = 0; i < entries.size(); i++) {
-            final Map<String, Object> entryMap = requireMap(entries.get(i), String.class, Object.class);
+            final Map<String, Object> entryMap = nodeMapValue(entries.get(i), String.class, Object.class);
             final long key = nodeLongValue(entryMap.get("key"));
             final long count = nodeLongValue(entryMap.get("count"));
             final double min = nodeDoubleValue(entryMap.get("min"), Double.NaN);
@@ -42,7 +42,8 @@ public class InternalHistogramFacetHelper {
                 fullEntries[i] = new InternalFullHistogramFacet.FullEntry(key, count, min, max, totalCount, total);
             }
         }
-        final HistogramFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
+        // FIXME TO_PR not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null. see https://github.com/bazaarvoice/es-client-java/issues/7
+        final HistogramFacet.ComparatorType comparatorType = null;
         if (countEntries != null) {
             return new InternalCountHistogramFacet(facetName, comparatorType, countEntries);
         } else {

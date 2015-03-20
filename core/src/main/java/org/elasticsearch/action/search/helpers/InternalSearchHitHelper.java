@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.apache.lucene.search.Explanation;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -15,9 +15,9 @@ import org.elasticsearch.search.internal.InternalSearchHitField;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.readBytesReference;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeBytesReferenceValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeFloatValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
@@ -27,7 +27,8 @@ public class InternalSearchHitHelper {
     public static InternalSearchHit fromXContent(final Map<String, Object> map) {
         Object explanation = map.get("_explanation");
         String nodeid = null;
-        int shardid = -1; // FIXME not quite right, but the es serialization node is confusing
+        // FIXME TO_PR not quite right, but the es serialization node is confusing. see https://github.com/bazaarvoice/es-client-java/issues/8
+        int shardid = -1;
         // it only serializes _shard and _node if explanation != null, but it always serializes _index,
         // and the only way _index could be set is at the same time as the other fields,
         // (unless it comes from the read(instream) method, in which case shardid and index get set, but nodeid may be unset.
@@ -45,15 +46,15 @@ public class InternalSearchHitHelper {
         String id = nodeStringValue(map.get("_id"), null);
         long version = nodeLongValue(map.get("_version"), -1);
         float score = nodeFloatValue(map.get("_score"), Float.NaN);
-        BytesReference source = readBytesReference(map.get("_source"));
+        BytesReference source = nodeBytesReferenceValue(map.get("_source"));
         final int docId = -1; // this field isn't serialized
         ImmutableMap.Builder<String, SearchHitField> fields = ImmutableMap.builder();
         if (map.containsKey("fields")) {
-            Map<String, Object> fieldsMap = requireMap(map.get("fields"), String.class, Object.class);
+            Map<String, Object> fieldsMap = nodeMapValue(map.get("fields"), String.class, Object.class);
             for (Map.Entry<String, Object> fieldEntry : fieldsMap.entrySet()) {
                 final ImmutableList.Builder<Object> valuesBuilder = ImmutableList.builder();
                 if (fieldEntry.getValue() instanceof List) {
-                    for (Object value : requireList(fieldEntry.getValue(), Object.class)) {
+                    for (Object value : nodeListValue(fieldEntry.getValue(), Object.class)) {
                         valuesBuilder.add(value);
                     }
                 } else {
@@ -70,14 +71,14 @@ public class InternalSearchHitHelper {
 
         if (map.containsKey("highlight")) {
             ImmutableMap.Builder<String, HighlightField> highlights = ImmutableMap.builder();
-            final Map<String, Object> highlightMap = requireMap(map.get("highlight"), String.class, Object.class);
+            final Map<String, Object> highlightMap = nodeMapValue(map.get("highlight"), String.class, Object.class);
             for (Map.Entry<String, Object> entry : highlightMap.entrySet()) {
                 final String name = entry.getKey();
                 final Text[] fragments;
                 if (entry.getValue() == null) {
                     fragments = null;
                 } else {
-                    final List<String> strings = requireList(entry.getValue(), String.class);
+                    final List<String> strings = nodeListValue(entry.getValue(), String.class);
                     fragments = new Text[strings.size()];
                     for (int i = 0; i < strings.size(); i++) {
                         fragments[i] = new StringText(strings.get(i));
@@ -91,12 +92,12 @@ public class InternalSearchHitHelper {
 
         if (map.containsKey("sort")) {
             // TODO: can't really tell if this is the right thing to do.
-            final List<Object> sorts = requireList(map.get("sort"), Object.class);
+            final List<Object> sorts = nodeListValue(map.get("sort"), Object.class);
             internalSearchHit.sortValues(sorts.toArray());
         }
 
         if (map.containsKey("matched_filters")) {
-            final List<String> matched_filters = requireList(map.get("matched_filters"), String.class);
+            final List<String> matched_filters = nodeListValue(map.get("matched_filters"), String.class);
             internalSearchHit.matchedQueries(matched_filters.toArray(new String[matched_filters.size()]));
         }
 
@@ -108,12 +109,12 @@ public class InternalSearchHitHelper {
     }
 
     private static Explanation getExplanation(final Object explanationObj) {
-        final Map<String, Object> explainMap = requireMap(explanationObj, String.class, Object.class);
+        final Map<String, Object> explainMap = nodeMapValue(explanationObj, String.class, Object.class);
         final float value = nodeFloatValue(explainMap.get("value"));
         final String description = nodeStringValue(explainMap.get("description"), null);
         final Explanation explanation = new Explanation(value, description);
         if (explainMap.containsKey("details")) {
-            for (Object detail : requireList(explainMap.get("details"), Object.class)) {
+            for (Object detail : nodeListValue(explainMap.get("details"), Object.class)) {
                 explanation.addDetail(getExplanation(detail));
             }
         }

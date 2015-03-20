@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.search.facet.datehistogram.DateHistogramFacet;
 import org.elasticsearch.search.facet.datehistogram.InternalCountDateHistogramFacet;
@@ -9,19 +9,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeDoubleValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
 public class InternalDateHistogramFacetHelper {
     public static  InternalDateHistogramFacet fromXContent(final String facetName, final Map<String,Object> facetMap){
-        final List<Object> entries = requireList(facetMap.get("entries"), Object.class);
+        final List<Object> entries = nodeListValue(facetMap.get("entries"), Object.class);
         InternalCountDateHistogramFacet.CountEntry[] countEntries = null;
         InternalFullDateHistogramFacet.FullEntry[] fullEntries = null;
         for (int i = 0; i < entries.size(); i++) {
-            final Map<String, Object> entryMap = requireMap(entries.get(i), String.class, Object.class);
+            final Map<String, Object> entryMap = nodeMapValue(entries.get(i), String.class, Object.class);
             final long time = nodeLongValue(entryMap.get("time"));
             final long count = nodeLongValue(entryMap.get("count"));
             final double min = nodeDoubleValue(entryMap.get("min"), Double.NaN);
@@ -43,7 +43,8 @@ public class InternalDateHistogramFacetHelper {
                 fullEntries[i] = new InternalFullDateHistogramFacet.FullEntry(time, count, min, max, totalCount, total);
             }
         }
-        final DateHistogramFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
+        // FIXME TO_PR not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null. see https://github.com/bazaarvoice/es-client-java/issues/7
+        final DateHistogramFacet.ComparatorType comparatorType = null;
         InternalDateHistogramFacet facet;
         if (countEntries != null) {
             return new InternalCountDateHistogramFacet(facetName, comparatorType, countEntries);

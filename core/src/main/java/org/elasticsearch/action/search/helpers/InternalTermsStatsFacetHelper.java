@@ -1,4 +1,4 @@
-package org.elasticsearch.action.search;
+package org.elasticsearch.action.search.helpers;
 
 import org.elasticsearch.common.text.StringText;
 import org.elasticsearch.search.facet.termsstats.InternalTermsStatsFacet;
@@ -13,22 +13,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeDoubleValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
 public class InternalTermsStatsFacetHelper {
     public static InternalTermsStatsFacet fromXContent(final String facetName, final Map<String, Object> facetMap) {
-        final TermsStatsFacet.ComparatorType comparatorType = null; // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null.
+        // FIXME not serialized, so there's nothing we can pick here. Not sure of the impact of choosing null. see https://github.com/bazaarvoice/es-client-java/issues/9
+        final TermsStatsFacet.ComparatorType comparatorType = null;
         long missing = nodeLongValue(facetMap.get("missing"));
         Collection<InternalTermsStatsStringFacet.StringEntry> stringEntries = null;
         Collection<InternalTermsStatsDoubleFacet.DoubleEntry> doubleEntries = null;
         Collection<InternalTermsStatsLongFacet.LongEntry> longEntries = null;
-        List<Object> terms = requireList(facetMap.get("terms"), Object.class);
+        List<Object> terms = nodeListValue(facetMap.get("terms"), Object.class);
         for (Object termEntryO : terms) {
-            Map<String, Object> termEntry = requireMap(termEntryO, String.class, Object.class);
+            Map<String, Object> termEntry = nodeMapValue(termEntryO, String.class, Object.class);
             Object termO = termEntry.get("term");
             long count = nodeLongValue(termEntry.get("count"));
             long total_count = nodeLongValue(termEntry.get("total_count"));

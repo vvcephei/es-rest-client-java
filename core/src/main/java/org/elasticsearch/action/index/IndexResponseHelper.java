@@ -1,4 +1,4 @@
-package org.elasticsearch.action.delete;
+package org.elasticsearch.action.index;
 
 import org.elasticsearch.action.FromXContent;
 
@@ -10,15 +10,15 @@ import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLo
 
 /**
  * The inverse of the anonymous {@link org.elasticsearch.rest.action.support.RestBuilderListener}
- * in {@link org.elasticsearch.rest.action.delete.RestDeleteAction}
+ * in {@link org.elasticsearch.rest.action.index.RestIndexAction}
  */
-public class DeleteResponseHelper implements FromXContent<DeleteResponse>{
-    @Override public DeleteResponse fromXContent(final Map<String, Object> map) {
-        return new DeleteResponse(
+public class IndexResponseHelper implements FromXContent<IndexResponse> {
+    @Override public IndexResponse fromXContent(final Map<String, Object> map) {
+        return new IndexResponse(
             nodeStringValue(map.get("_index")),
             nodeStringValue(map.get("_type")),
             nodeStringValue(map.get("_id")),
             nodeLongValue(map.get("_version")),
-            nodeBooleanValue(map.get("found")));
+            nodeBooleanValue(map.get("created")));
     }
 }

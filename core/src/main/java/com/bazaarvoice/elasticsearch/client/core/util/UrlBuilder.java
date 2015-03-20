@@ -14,6 +14,14 @@ import java.util.List;
 
 import static org.elasticsearch.common.Preconditions.checkNotNull;
 
+/**
+ * A convenience class. Allows you to build urls using method chaining and without
+ * external dependencies (except a few guice utilities via ES).
+ *
+ * Not guaranteed to be hardened. I threw it together to make implementing the
+ * REST calls easier. I'm planning to pull this into a separate project
+ * and harden it later.
+ */
 public class UrlBuilder {
     private final String protocol;
     private final String host;

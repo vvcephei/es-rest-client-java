@@ -1,20 +1,27 @@
 package org.elasticsearch.action.search;
 
+import org.elasticsearch.action.FromXContent;
+import org.elasticsearch.action.search.helpers.InternalSearchResponseHelper;
 import org.elasticsearch.common.Preconditions;
+import org.elasticsearch.common.xcontent.ToXContent.Params;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchShardTarget;
 
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireList;
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireMap;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeStringValue;
 
-public class SearchResponseHelper {
-    public static SearchResponse fromXContent(final Map<String, Object> map) {
-        Map<String, Object> shards = requireMap(map.get("_shards"), String.class, Object.class);
+/**
+ * The inverse of {@link org.elasticsearch.action.search.SearchResponse#toXContent(XContentBuilder, Params)}
+ */
+public class SearchResponseHelper implements FromXContent<SearchResponse> {
+    @Override public SearchResponse fromXContent(final Map<String, Object> map) {
+        Map<String, Object> shards = nodeMapValue(map.get("_shards"), String.class, Object.class);
         int totalShards = nodeIntegerValue(shards.get("total"));
         int successfulShards = nodeIntegerValue(shards.get("successful"));
         int failedShards = totalShards - successfulShards;
@@ -34,9 +41,9 @@ public class SearchResponseHelper {
             Preconditions.checkState(!shards.containsKey("failures"));
             return shardSearchFailures;
         }
-        Object[] failures = requireList(shards.get("failures"), Object.class).toArray();
+        Object[] failures = nodeListValue(shards.get("failures"), Object.class).toArray();
         for (int i = 0; i < failedShards; i++) {
-            Map<String, Object> failure = requireMap(failures[i], String.class, Object.class);
+            Map<String, Object> failure = nodeMapValue(failures[i], String.class, Object.class);
             SearchShardTarget shard = null;
             if (failure.containsKey("index") && failure.containsKey("shard")) {
                 String index = nodeStringValue(failure.get("index"), null);
