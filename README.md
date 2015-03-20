@@ -73,3 +73,4 @@ and ```org.elasticsearch.action.get.GetRest.getResponseFunction``` is the invers
 
 The result is hopefully an idiomatic, performant, and correct implementation of the desired functions.
 
+
