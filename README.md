@@ -1,6 +1,10 @@
 es-client-java
 ==============
 
+In case the rest of this readme doesn't make it clear, this is a pre-release version of this project. I'm seeking input from the Elasticsearch devs (and anyone else who cares to comment). Feel free to send me GH Issues or comment on the original issue: https://github.com/elastic/elasticsearch/issues/7743.
+
+Also, I'm working on releasing version 1.0PRE1 so you can depend on the prerelease if you want to. It'll be done early next week.
+
 This project is part proof of concept and part initial implementation of a REST+JSON elasticsearch client for Java.
 
 Most Java projects use either the Node or Transport client or the Jest client. Each of these has some major drawbacks:
