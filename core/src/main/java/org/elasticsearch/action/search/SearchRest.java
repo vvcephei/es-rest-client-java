@@ -22,7 +22,7 @@ public class SearchRest<ResponseType> extends AbstractRestClientAction<SearchReq
     }
 
     @Override public ListenableFuture<ResponseType> act(final SearchRequest request) {
-        UrlBuilder url = UrlBuilder.create();
+        UrlBuilder url = UrlBuilder.create().protocol(protocol).host(host).port(port);
 
         if (request.indices() == null || request.indices().length == 0) {
             url = url.path("_search");
@@ -51,8 +51,6 @@ public class SearchRest<ResponseType> extends AbstractRestClientAction<SearchReq
             .paramIfPresent("routing", fromNullable(request.routing()))
             .paramIfPresent("preference", fromNullable(request.preference()))
         ;
-
-
         return Futures.transform(executor.post(url.url(), InputStreams.of(request.source())), responseTransform);
     }
 }

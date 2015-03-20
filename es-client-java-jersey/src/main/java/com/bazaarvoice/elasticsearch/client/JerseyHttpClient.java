@@ -3,14 +3,12 @@ package com.bazaarvoice.elasticsearch.client;
 import com.bazaarvoice.elasticsearch.client.core.HttpClient;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
 import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
-import com.sun.jersey.api.client.AsyncWebResource;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Throwables;
-import org.elasticsearch.common.lang3.tuple.ImmutablePair;
-import org.elasticsearch.common.lang3.tuple.Pair;
+import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
 import org.elasticsearch.common.util.concurrent.ListeningExecutorService;
 import org.elasticsearch.common.util.concurrent.MoreExecutors;
@@ -19,14 +17,11 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
+import static org.elasticsearch.common.collect.Iterables.transform;
 
 /**
  * implement the SPIs with the Jersey Http client
@@ -96,6 +91,11 @@ public class JerseyHttpClient {
 
     private static class JerseyResponse implements HttpResponse {
         private final ClientResponse delegate;
+        private static final Function<String, String> toLowerCaseFn = new Function<String, String>() {
+            @Override public String apply(final String s) {
+                return s.toLowerCase();
+            }
+        };
 
         private JerseyResponse(final ClientResponse delegate) {this.delegate = delegate;}
 
@@ -110,5 +110,10 @@ public class JerseyHttpClient {
         @Override public InputStream response() {
             return delegate.getEntityInputStream();
         }
+
+        @Override public Set<String> contentTypeLowerCase() {
+            return ImmutableSet.copyOf(transform(delegate.getHeaders().get("Content-Type"), toLowerCaseFn));
+        }
+
     }
 }

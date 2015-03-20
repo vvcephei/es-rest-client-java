@@ -1,6 +1,7 @@
 package com.bazaarvoice.elasticsearch.client.core.spi;
 
 import java.io.InputStream;
+import java.util.Set;
 
 
 /**
@@ -12,4 +13,5 @@ public interface HttpResponse {
     public boolean isSuccess();
     public int statusCode();
     public InputStream response();
+    Set<String> contentTypeLowerCase();
 }

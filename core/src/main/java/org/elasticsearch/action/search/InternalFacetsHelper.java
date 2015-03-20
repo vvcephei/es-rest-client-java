@@ -19,7 +19,12 @@ import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requir
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.requireString;
 
 public class InternalFacetsHelper {
-    public static InternalFacets fromXContent(final Map<String, Object> content) {
+    public static InternalFacets fromXContent(final Map<String, Object> map) {
+        if (!map.containsKey("facets")) {
+            return null;
+        }
+        final Map<String, Object> content = requireMap(map.get("facets"), String.class, Object.class);
+
         final List<Facet> facetsList = new ArrayList<Facet>(content.size());
         for (Map.Entry<String, Object> facetEntry : content.entrySet()) {
             final String facetName = facetEntry.getKey();

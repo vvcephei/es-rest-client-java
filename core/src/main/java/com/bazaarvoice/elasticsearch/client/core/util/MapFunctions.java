@@ -22,10 +22,28 @@ public class MapFunctions {
         }
     }
 
+    public static int requireInt(@Nullable Object o) {
+        Preconditions.checkNotNull(o);
+        if (o instanceof Number){
+            return ((Number)o).intValue();
+        } else {
+            throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
+        }
+    }
+
     public static long requireLong(@Nullable Object o) {
         Preconditions.checkNotNull(o);
         if (o instanceof Number){
             return ((Number)o).longValue();
+        } else {
+            throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
+        }
+    }
+
+    public static float requireFloat(@Nullable Object o) {
+        Preconditions.checkNotNull(o);
+        if (o instanceof Number){
+            return ((Number)o).floatValue();
         } else {
             throw new IllegalArgumentException(String.format("%s was expected to be a long but was %s", o, o.getClass()));
         }
@@ -63,8 +81,10 @@ public class MapFunctions {
                 if (!keyClass.isAssignableFrom(elem.getKey().getClass())) {
                     throw new IllegalArgumentException(String.format("%s was expected to be a %s but was a %s", elem.getKey(), keyClass.getCanonicalName(), elem.getKey().getClass().getCanonicalName()));
                 }
-                if (!valueClass.isAssignableFrom(elem.getValue().getClass())) {
-                    throw new IllegalArgumentException(String.format("%s was expected to be a %s but was a %s", elem.getValue(), valueClass.getCanonicalName(), elem.getValue().getClass().getCanonicalName()));
+                final Object value = elem.getValue();
+                // null is assignable to every type
+                if (value != null && !valueClass.isAssignableFrom(value.getClass())) {
+                    throw new IllegalArgumentException(String.format("%s was expected to be a %s but was a %s", value, valueClass.getCanonicalName(), value.getClass().getCanonicalName()));
                 }
             }
             //noinspection unchecked
