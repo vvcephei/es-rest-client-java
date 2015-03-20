@@ -31,10 +31,7 @@ Implemented:
 * get
 * index
 * delete
-
-In Progress:
-
-* search
+* search (but several parts of search objects are not serialized in the API and cannot be inferred, so they are not implemented. Notable: aggregations is entirely unimplemented)
 
 ### HttpExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
@@ -61,6 +58,10 @@ to pull in the http client in a seperate module.
 
 We don't want to put users in the position of trying to exclude undesired dependencies or versions. With this setup, anyone can quickly provide a custom implementation using
 the http client that's already in their dependencies.
+
+### Exports for ES
+
+I've attached the Apache 2.0 licence, the same license that ES uses, and I've pulled the deserializations for InternalSomeObject out into InternalSomeObjectHelper classes, with the intention that ES can copy and paste the InternalSomeObjectHelper.fromXContent() method to live right next to the InternalSomeObject.toXContent() method.
 
 Approach
 --------
