@@ -15,7 +15,7 @@
     <version>0.1PRE1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <url>https://github.com/bazaarvoice/es-client-java/</url>
+    <url>https://github.com/vvcephei/es-client-java/</url>
     <inceptionYear>2009</inceptionYear>
     <licenses>
         <license>
@@ -25,9 +25,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git@github.com:bazaarvoice/es-client-java.git</connection>
-        <developerConnection>scm:git:git@github.com:bazaarvoice/es-client-java.git</developerConnection>
-        <url>http://github.com/bazaarvoice/es-client-java</url>
+        <connection>scm:git:git@github.com:vvcephei/es-client-java.git</connection>
+        <developerConnection>scm:git:git@github.com:vvcephei/es-client-java.git</developerConnection>
+        <url>http://github.com/vvcephei/es-client-java</url>
     </scm>
 
     <properties>
