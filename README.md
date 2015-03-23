@@ -20,6 +20,8 @@ See this issue for some background: https://github.com/elastic/elasticsearch/iss
 State and Goals
 -----
 
+![build status](https://travis-ci.org/vvcephei/es-client-java.svg?branch=master)
+
 It will take a while to implement the whole ES api, so I'm publicising the project with just a few methods implemented. I'm hoping to accomplish two things:
 
 1. Get some feedback on the approach and implementation. I've just hacked several things out to just get something working. Please give me your feedback
