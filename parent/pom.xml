@@ -22,12 +22,6 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <scm>
-        <url>http://github.com/vvcephei/es-client-java</url>
-        <connection>scm:git:git@github.com:vvcephei/es-client-java.git</connection>
-        <developerConnection>scm:git:git@github.com:vvcephei/es-client-java.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
 
     <properties>
         <elasticsearch.version>1.4.4</elasticsearch.version>
