@@ -3,8 +3,6 @@ es-client-java
 
 In case the rest of this readme doesn't make it clear, this is a pre-release version of this project. I'm seeking input from the Elasticsearch devs (and anyone else who cares to comment). Feel free to send me GH Issues or comment on the original issue: https://github.com/elastic/elasticsearch/issues/7743.
 
-Also, I'm working on releasing version 1.0PRE1 so you can depend on the prerelease if you want to. It'll be done early next week.
-
 This project is part proof of concept and part initial implementation of a REST+JSON elasticsearch client for Java.
 
 Most Java projects use either the Node or Transport client or the Jest client. Each of these has some major drawbacks:
@@ -38,6 +36,11 @@ Implemented:
 * index
 * delete
 * search (but several parts of search objects are not serialized in the API and cannot be inferred, so they are not implemented. Notable: aggregations is entirely unimplemented)
+
+
+|Version|Notes|
+|-------|-----|
+|7.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
 
 ### HttpExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
