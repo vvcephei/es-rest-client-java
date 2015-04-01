@@ -85,6 +85,15 @@ import org.elasticsearch.threadpool.ThreadPool;
  * This class implements all of them in terms of just one of them, leaving extenders
  * to implement only one variant.
  * <p/>
+ * This is a different approach from {@link org.elasticsearch.client.support.AbstractClient},
+ * which leaves only the execute method to implement. I'm guessing the idea with that
+ * abstract client is to make it easier to delegate action execution to a number of
+ * internal execution paths.
+ * <p/>
+ * Here, we have just one execution path, and the approach used here makes it clearer
+ * to implementers which pieces of the api remain to be implemented, which should make
+ * it easier to maintain compatibility with the upstream.
+ * <p/>
  * Note that there are some TODOS (settings and threadPool)
  * Note also that execute don't need to be called from clients, and they complicate
  * matters, so they will throw an UnsupportedOperationException
