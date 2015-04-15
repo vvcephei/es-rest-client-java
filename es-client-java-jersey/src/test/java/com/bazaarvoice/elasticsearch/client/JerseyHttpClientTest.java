@@ -21,10 +21,6 @@ public class JerseyHttpClientTest {
     private static Node node;
     private static Client client;
 
-    protected Client restClient() {
-        return client;
-    }
-
     @BeforeSuite
     public static void setup() {
         final Node node = buildNode();
@@ -52,8 +48,15 @@ public class JerseyHttpClientTest {
         nodeBuilder.settings().put("path.home", homeDirectory.getPath());
         nodeBuilder.settings().put("path.logs", new File(homeDirectory, "logs").getPath());
         nodeBuilder.settings().put("index.number_of_replicas", 0);
+        nodeBuilder.settings().put("script.disable_dynamic", false);
         return nodeBuilder.build();
     }
+
+    protected Client restClient() {
+        return client;
+    }
+
+    protected Client nodeClient() { return node.client();}
 
     @AfterSuite
     public void teardown() {

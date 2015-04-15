@@ -75,7 +75,7 @@ public class HttpClient extends AbstractClient implements Client {
     private final IndexRest<IndexResponse> indexRest;
     private final GetRest<GetResponse> getRest;
     private final DeleteRest<DeleteResponse> deleteRest;
-    private final SearchRest<SearchResponse> searchRest;
+    private final SearchRest searchRest;
 
     public static HttpClient withExecutor(final String protocol, final String host, final int port, final HttpExecutor executor) {
         return new HttpClient(protocol, host, port, executor);
@@ -85,7 +85,7 @@ public class HttpClient extends AbstractClient implements Client {
         indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new XContentResponseTransform<IndexResponse>(new IndexResponseHelper()));
         getRest = new GetRest<GetResponse>(protocol, host, port, executor, new XContentResponseTransform<GetResponse>(new GetResponseHelper()));
         deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new XContentResponseTransform<DeleteResponse>(new DeleteResponseHelper()));
-        searchRest = new SearchRest<SearchResponse>(protocol, host, port, executor, new XContentResponseTransform<SearchResponse>(new SearchResponseHelper()));
+        searchRest = new SearchRest(protocol, host, port, executor);
     }
 
     @Override public void close() {

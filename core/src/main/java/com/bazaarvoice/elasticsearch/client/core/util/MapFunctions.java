@@ -1,5 +1,6 @@
 package com.bazaarvoice.elasticsearch.client.core.util;
 
+import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Preconditions;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -7,6 +8,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.jackson.core.util.ByteArrayBuilder;
 import org.elasticsearch.common.xcontent.XContentGenerator;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.common.xcontent.smile.SmileXContent;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,6 +19,18 @@ import java.util.Map;
  * {@link org.elasticsearch.common.xcontent.support.XContentMapValues}
  */
 public class MapFunctions {
+    public static Map<String, Object> toMap(final BytesReference bytes) {
+        try {
+            return SmileXContent.smileXContent.createParser(bytes).map();
+        } catch (IOException e) {
+            try {
+                return JsonXContent.jsonXContent.createParser(bytes).map();
+            } catch (IOException e1) {
+                throw new RuntimeException("Couldn't parse bytes as either SMILE or JSON", e);
+            }
+        }
+    }
+
     public static String nodeStringValue(@Nullable Object o) {
         Preconditions.checkNotNull(o);
         if (o instanceof String) {
@@ -58,7 +72,7 @@ public class MapFunctions {
             //noinspection unchecked
             return (Map<K, V>) o;
         } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a list but was %s", o, o.getClass()));
+            throw new IllegalArgumentException(String.format("%s was expected to be a map but was %s", o, o.getClass()));
         }
     }
 
@@ -67,6 +81,14 @@ public class MapFunctions {
             return null;
         } else {
             return new BytesArray(readRaw(o));
+        }
+    }
+
+    public static BytesRef nodeBytesRefValue(final @Nullable Object o) {
+        if (o == null) {
+            return null;
+        } else {
+            return new BytesRef(readRaw(o));
         }
     }
 
