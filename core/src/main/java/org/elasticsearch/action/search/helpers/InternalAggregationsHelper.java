@@ -1,5 +1,6 @@
 package org.elasticsearch.action.search.helpers;
 
+import com.sun.tools.corba.se.idl.constExpr.Not;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -7,11 +8,15 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.DoubleTermsHelper;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 
 public class InternalAggregationsHelper {
     public static InternalAggregations fromXContent(final Map<String, Object> map) {
@@ -19,71 +24,93 @@ public class InternalAggregationsHelper {
             return new InternalAggregations(ImmutableList.<InternalAggregation>of());
         }
 
-        // FIXME TO_PR make the api return enough info to deserialize the Aggregations. see https://github.com/bazaarvoice/es-client-java/issues/5
-        // toXContent needs to serialize the type of the aggregations. We /could/
-        // perform read-time coersion to get around this (but it would be messy),
-        // but the api doesn't even return enough information to reconstruct the internal aggregation objects.
-        // for example, an average aggregation returns only the average, but the
-        // java object needs the sum and count in the constructor.
-        return new NotImplementedInternalAggregations();
+        final ImmutableList.Builder<InternalAggregation> builder = ImmutableList.builder();
+        final Map<String, Object> aggregationsMap = nodeMapValue(map.get("aggregations"), String.class, Object.class);
+        for (Map.Entry<String, Object> aggregation : aggregationsMap.entrySet()) {
+            final Map<String, Object> aggregationMap = nodeMapValue(aggregation.getValue(), String.class, Object.class);
+            builder.add(InternalAggregationHelper.fromXContent(aggregation.getKey(), aggregationMap));
+        }
+
+        return new InternalAggregations(builder.build());
     }
 
-    public static class NotImplementedException extends RuntimeException {
-        public NotImplementedException(final String message) {
-            super(message);
-        }
-    }
+    public static class UnrealizedAggregations extends InternalAggregations {
+        private final Map<String, Object> map;
 
-    /**
-     * A special Aggregations implementation that informs you that Aggregations is not implemented
-     */
-    private static class NotImplementedInternalAggregations extends InternalAggregations {
-
-        private final NotImplementedException EXCEPTION = new NotImplementedException("Aggregations is not implementable given the current format of the json responses. The ES api needs to serialize the type of the aggregation as well as enough information to construct aggregation objects from the json. Both of these conditions are currently unmet.");
-
-        public NotImplementedInternalAggregations() {
-            super(null);
+        /**
+         * Constructs a new addAggregation.
+         *
+         * @param aggregationsMap
+         */
+        public UnrealizedAggregations(final Map<String, Object> aggregationsMap) {
+            super(null); // we're completely shadowing InternalAggregations
+            this.map = aggregationsMap;
         }
 
-        public NotImplementedInternalAggregations(final List<InternalAggregation> aggregations) {
-            super(null);
-        }
-
-        @Override public List<Aggregation> asList() {
-            throw EXCEPTION;
-        }
-
-        @Override public Map<String, Aggregation> asMap() {
-            throw EXCEPTION;
+        public DoubleTerms getDoubleTerms(final String name) {
+            if (map.containsKey(name)) {
+                final Map<String, Object> doubleTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
+                return DoubleTermsHelper.fromXContent(name, doubleTermsMap);
+            } else {
+                return null;
+            }
         }
 
         @Override public <A extends Aggregation> A get(final String name) {
-            throw EXCEPTION;
+            throw new NotImplementedException();
+        }
+
+        @Override public List<Aggregation> asList() {
+            throw new NotImplementedException();
+        }
+
+        @Override public Map<String, Aggregation> asMap() {
+            throw new NotImplementedException();
         }
 
         @Override public Map<String, Aggregation> getAsMap() {
-            throw EXCEPTION;
+            throw new NotImplementedException();
         }
 
-
         @Override public Iterator<Aggregation> iterator() {
-            throw EXCEPTION;
+            throw new NotImplementedException();
         }
 
         @Override public void readFrom(final StreamInput in) throws IOException {
-            throw EXCEPTION;
+            throw new NotImplementedException();
         }
 
         @Override public XContentBuilder toXContent(final XContentBuilder builder, final Params params) throws IOException {
-            throw EXCEPTION;
+            throw new NotImplementedException();
         }
 
         @Override public XContentBuilder toXContentInternal(final XContentBuilder builder, final Params params) throws IOException {
-            throw EXCEPTION;
+            throw new NotImplementedException();
         }
 
         @Override public void writeTo(final StreamOutput out) throws IOException {
-            throw EXCEPTION;
+            throw new NotImplementedException();
+        }
+    }
+
+    public static class NotImplementedException extends RuntimeException {
+        public NotImplementedException() {
+        }
+
+        public NotImplementedException(final Throwable cause) {
+            super(cause);
+        }
+
+        public NotImplementedException(final String message) {
+            super(message);
+        }
+
+        public NotImplementedException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
+
+        public NotImplementedException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
         }
     }
 }
