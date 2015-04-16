@@ -369,7 +369,7 @@ public abstract class AbstractClient implements Client {
 
     @Override public ThreadPool threadPool() {
         // TODO flesh out client
-        final ThreadPool dummyThreadPool = new ThreadPool(ImmutableSettings.builder().build(), null);
+        final ThreadPool dummyThreadPool = new ThreadPool("dummy");
         return dummyThreadPool;
     }
 
