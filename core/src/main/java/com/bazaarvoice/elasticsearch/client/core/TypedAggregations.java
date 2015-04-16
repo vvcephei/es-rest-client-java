@@ -67,11 +67,19 @@ public class TypedAggregations {
     }
 
     public LongTerms getLongTerms(final String name) {
-        return null;
+        if (isUnrealized()) {
+            return unrealizedAggregations.getLongTerms(name);
+        } else {
+            return aggregations.get(name);
+        }
     }
 
     public StringTerms getStringTerms(final String name) {
-        return null;
+        if (isUnrealized()) {
+            return unrealizedAggregations.getStringTerms(name);
+        } else {
+            return aggregations.get(name);
+        }
     }
 
     // Significant

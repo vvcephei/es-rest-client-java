@@ -1,6 +1,5 @@
 package org.elasticsearch.action.search.helpers;
 
-import com.sun.tools.corba.se.idl.constExpr.Not;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -10,6 +9,10 @@ import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.DoubleTermsHelper;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTermsHelper;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTermsHelper;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -56,7 +59,27 @@ public class InternalAggregationsHelper {
             }
         }
 
-        @Override public <A extends Aggregation> A get(final String name) {
+
+        public LongTerms getLongTerms(final String name) {
+            if (map.containsKey(name)) {
+                final Map<String, Object> longTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
+                return LongTermsHelper.fromXContent(name, longTermsMap);
+            } else {
+                return null;
+            }
+        }
+
+
+        public StringTerms getStringTerms(final String name) {
+            if (map.containsKey(name)) {
+                final Map<String, Object> longTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
+                return StringTermsHelper.fromXContent(name, longTermsMap);
+            } else {
+                return null;
+            }
+        }
+
+        @Override public Iterator<Aggregation> iterator() {
             throw new NotImplementedException();
         }
 
@@ -72,11 +95,7 @@ public class InternalAggregationsHelper {
             throw new NotImplementedException();
         }
 
-        @Override public Iterator<Aggregation> iterator() {
-            throw new NotImplementedException();
-        }
-
-        @Override public void readFrom(final StreamInput in) throws IOException {
+        @Override public <A extends Aggregation> A get(final String name) {
             throw new NotImplementedException();
         }
 
@@ -88,9 +107,14 @@ public class InternalAggregationsHelper {
             throw new NotImplementedException();
         }
 
+        @Override public void readFrom(final StreamInput in) throws IOException {
+            throw new NotImplementedException();
+        }
+
         @Override public void writeTo(final StreamOutput out) throws IOException {
             throw new NotImplementedException();
         }
+
     }
 
     public static class NotImplementedException extends RuntimeException {

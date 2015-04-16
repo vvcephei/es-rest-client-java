@@ -1,5 +1,6 @@
 package com.bazaarvoice.elasticsearch.client.core.util;
 
+import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Preconditions;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -67,6 +68,14 @@ public class MapFunctions {
             return null;
         } else {
             return new BytesArray(readRaw(o));
+        }
+    }
+
+    public static BytesRef nodeBytesRefValue(final @Nullable Object o) {
+        if (o == null) {
+            return null;
+        } else {
+            return new BytesRef(readRaw(o));
         }
     }
 
