@@ -1,11 +1,15 @@
 package com.bazaarvoice.elasticsearch.client;
 
+import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.Suggest;
@@ -34,12 +38,14 @@ public class SearchTest extends JerseyHttpClientTest {
 
         final String facetName = "myfacet";
         final String suggestionName = "mysugg";
+        final String aggregationName = "mytermsagg";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
         searchRequestBuilder.addFacet(FacetBuilders.termsFacet(facetName).field("field").size(10));
         searchRequestBuilder.addSuggestion(new TermSuggestionBuilder(suggestionName).text("valeu").field("field"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.terms(aggregationName).field("field"));
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
 
@@ -76,8 +82,14 @@ public class SearchTest extends JerseyHttpClientTest {
             if (debug) System.out.println("facet: entry: count: " + Objects.toString(entry.getCount()));
             assertEquals(entry.getCount(), 1);
         }
-        if (debug) System.out.println("aggs (not implemented): " + Objects.toString(searchResponse.getAggregations()));
-        //TODO
+        if (debug) System.out.println("aggs: " + Objects.toString(searchResponse.getAggregations()));
+        final StringTerms stringTerms = TypedAggregations.facade(searchResponse.getAggregations()).getStringTerms(aggregationName);
+        for (Terms.Bucket bucket : stringTerms.getBuckets()) {
+            assertEquals(bucket.getKey(), "value");
+            assertEquals(bucket.getDocCount(), 1);
+        }
+        //TODO: more aggregations tests
+
 
         if (debug) System.out.println("suggest: " + Objects.toString(searchResponse.getSuggest()));
         final Suggest.Suggestion<Suggest.Suggestion.Entry<Suggest.Suggestion.Entry.Option>> suggestion = searchResponse.getSuggest().getSuggestion(suggestionName);

@@ -25,16 +25,10 @@ public class InternalAggregationsHelper {
     public static InternalAggregations fromXContent(final Map<String, Object> map) {
         if (!map.containsKey("aggregations")) {
             return new InternalAggregations(ImmutableList.<InternalAggregation>of());
+        } else {
+            final Map<String, Object> aggregationsMap = nodeMapValue(map.get("aggregations"), String.class, Object.class);
+            return new UnrealizedAggregations(aggregationsMap);
         }
-
-        final ImmutableList.Builder<InternalAggregation> builder = ImmutableList.builder();
-        final Map<String, Object> aggregationsMap = nodeMapValue(map.get("aggregations"), String.class, Object.class);
-        for (Map.Entry<String, Object> aggregation : aggregationsMap.entrySet()) {
-            final Map<String, Object> aggregationMap = nodeMapValue(aggregation.getValue(), String.class, Object.class);
-            builder.add(InternalAggregationHelper.fromXContent(aggregation.getKey(), aggregationMap));
-        }
-
-        return new InternalAggregations(builder.build());
     }
 
     public static class UnrealizedAggregations extends InternalAggregations {

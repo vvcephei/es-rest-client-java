@@ -22,7 +22,7 @@ public class DoubleTermsBucketHelper {
         // optional field "key_as_string"
         final long doc_count = nodeLongValue(map.get(DOC_COUNT));
         final boolean show_doc_count_error = map.containsKey(DOC_COUNT_ERROR_UPPER_BOUND);
-        final Long doc_count_error_upper_bound = nodeLongValue(DOC_COUNT_ERROR_UPPER_BOUND, -1);
+        final Long doc_count_error_upper_bound = nodeLongValue(map.get(DOC_COUNT_ERROR_UPPER_BOUND), -1);
 
         final Map<String, Object> subAggsMap = Maps.filterKeys(map, new Predicate<String>() {
             @Override public boolean apply(final String s) {
