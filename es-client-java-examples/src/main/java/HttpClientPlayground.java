@@ -1,4 +1,5 @@
 import com.bazaarvoice.elasticsearch.client.JerseyHttpClientFactory;
+import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -13,6 +14,11 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
+import org.elasticsearch.search.aggregations.metrics.valuecount.InternalValueCount;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
@@ -84,6 +90,10 @@ public class HttpClientPlayground {
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
         searchRequestBuilder.addFacet(FacetBuilders.termsFacet("myfacet").field("field").size(10));
         searchRequestBuilder.addSuggestion(new TermSuggestionBuilder("mysugg").text("valeu").field("field"));
+
+        searchRequestBuilder.addAggregation(AggregationBuilders.count("myCount").field("name"));
+
+
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
         System.out.println("took: " + Objects.toString(searchResponse.getTook()));
@@ -106,6 +116,15 @@ public class HttpClientPlayground {
         }
         System.out.println("facet: other: " + Objects.toString(myfacet.getOtherCount()));
         System.out.println("aggs (not implemented): " + Objects.toString(searchResponse.getAggregations()));
+
+
+        final Aggregation myCount = searchResponse.getAggregations().get("myCount");
+        final ValueCount myCount = searchResponse.getAggregations().get("myCount");
+
+        final ValueCount myValCount = (ValueCount) myCount;
+
+
+
         System.out.println("suggest: " + Objects.toString(searchResponse.getSuggest()));
         System.out.println("maxScore" + Objects.toString(searchResponse.getHits().getMaxScore()));
         System.out.println("totalHits: " + Objects.toString(searchResponse.getHits().getTotalHits()));

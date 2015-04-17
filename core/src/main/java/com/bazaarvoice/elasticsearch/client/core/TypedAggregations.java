@@ -20,6 +20,7 @@ import org.elasticsearch.search.aggregations.bucket.significant.SignificantStrin
 import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
 
 /**
@@ -40,7 +41,7 @@ public class TypedAggregations {
     private final Aggregations aggregations;
     private final InternalAggregationsHelper.UnrealizedAggregations unrealizedAggregations;
 
-    public static TypedAggregations facade(Aggregations aggregations) { return new TypedAggregations(aggregations); }
+    public static TypedAggregations wrap(Aggregations aggregations) { return new TypedAggregations(aggregations); }
 
     private TypedAggregations(final Aggregations aggregations) {
         if (aggregations instanceof InternalAggregationsHelper.UnrealizedAggregations) {
@@ -81,6 +82,11 @@ public class TypedAggregations {
             return aggregations.get(name);
         }
     }
+
+    // ValueCount
+
+    public ValueCount getValueCount(final String name) { return null;}
+
 
     // Significant
 

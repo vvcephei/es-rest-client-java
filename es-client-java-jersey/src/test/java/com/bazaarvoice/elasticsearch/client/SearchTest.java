@@ -2,23 +2,26 @@ package com.bazaarvoice.elasticsearch.client;
 
 import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
 import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Objects;
 
+import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -31,21 +34,27 @@ public class SearchTest extends JerseyHttpClientTest {
 
     private static boolean debug = false;
 
+    @BeforeClass
+    public void setupSearchTest() {
+        restClient().prepareIndex(INDEX, TYPE, ID).setSource("field", "value", "dfield", 2.3, "ifield", 4).setRefresh(true).execute().actionGet();
+    }
+
     @Test public void testSearch() {
-        final IndexRequestBuilder indexRequestBuilder = restClient().prepareIndex(INDEX, TYPE, ID).setSource("field", "value").setRefresh(true);
-        indexRequestBuilder.execute().actionGet();
-
-
         final String facetName = "myfacet";
         final String suggestionName = "mysugg";
-        final String aggregationName = "mytermsagg";
+        final String stringAggregationName = "mytermsagg1";
+        final String doubleAggregationName = "mytermsagg2";
+        final String longAggregationName = "mytermsagg3";
+        final String subAggregationName = "mytermsagg3-sub";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
         searchRequestBuilder.addFacet(FacetBuilders.termsFacet(facetName).field("field").size(10));
         searchRequestBuilder.addSuggestion(new TermSuggestionBuilder(suggestionName).text("valeu").field("field"));
-        searchRequestBuilder.addAggregation(AggregationBuilders.terms(aggregationName).field("field"));
+        searchRequestBuilder.addAggregation(terms(stringAggregationName).field("field"));
+        searchRequestBuilder.addAggregation(terms(doubleAggregationName).field("dfield"));
+        searchRequestBuilder.addAggregation(terms(longAggregationName).field("ifield").subAggregation(terms(subAggregationName).field("field")));
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
 
@@ -83,12 +92,40 @@ public class SearchTest extends JerseyHttpClientTest {
             assertEquals(entry.getCount(), 1);
         }
         if (debug) System.out.println("aggs: " + Objects.toString(searchResponse.getAggregations()));
-        final StringTerms stringTerms = TypedAggregations.facade(searchResponse.getAggregations()).getStringTerms(aggregationName);
-        for (Terms.Bucket bucket : stringTerms.getBuckets()) {
-            assertEquals(bucket.getKey(), "value");
-            assertEquals(bucket.getDocCount(), 1);
+        {
+            final StringTerms aggregation = searchResponse.getAggregations().get(stringAggregationName);
+
+
+            final StringTerms stringTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getStringTerms(stringAggregationName);
+            assertEquals(stringTerms.getBuckets().size(), 1);
+            for (Terms.Bucket bucket : stringTerms.getBuckets()) {
+                assertEquals(bucket.getKey(), "value");
+                assertEquals(bucket.getDocCount(), 1);
+            }
         }
-        //TODO: more aggregations tests
+        {
+            final DoubleTerms doubleTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getDoubleTerms(doubleAggregationName);
+            assertEquals(doubleTerms.getBuckets().size(), 1);
+            for (Terms.Bucket bucket : doubleTerms.getBuckets()) {
+                assertEquals(bucket.getKeyAsNumber(), (Number) 2.3);
+                assertEquals(bucket.getDocCount(), 1);
+            }
+        }
+        {
+            final LongTerms longTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getLongTerms(longAggregationName);
+            assertEquals(longTerms.getBuckets().size(), 1);
+            for (Terms.Bucket bucket : longTerms.getBuckets()) {
+                assertEquals(bucket.getKeyAsNumber(), (Number) 4l);
+                assertEquals(bucket.getDocCount(), 1);
+                // then test the subaggregation
+                final StringTerms stringTerms = TypedAggregations.wrap(bucket.getAggregations()).getStringTerms(subAggregationName);
+                assertEquals(stringTerms.getBuckets().size(), 1);
+                for (Terms.Bucket subBucket : stringTerms.getBuckets()) {
+                    assertEquals(subBucket.getKey(), "value");
+                    assertEquals(subBucket.getDocCount(), 1);
+                }
+            }
+        }
 
 
         if (debug) System.out.println("suggest: " + Objects.toString(searchResponse.getSuggest()));

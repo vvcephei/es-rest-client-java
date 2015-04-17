@@ -5,6 +5,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
@@ -33,6 +34,7 @@ public class InternalAggregationsHelper {
 
     public static class UnrealizedAggregations extends InternalAggregations {
         private final Map<String, Object> map;
+        private volatile InternalAggregations realizedAggregations = null;
 
         /**
          * Constructs a new addAggregation.
@@ -74,41 +76,73 @@ public class InternalAggregationsHelper {
         }
 
         @Override public Iterator<Aggregation> iterator() {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.iterator();
         }
 
         @Override public List<Aggregation> asList() {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.asList();
         }
 
         @Override public Map<String, Aggregation> asMap() {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.asMap();
         }
 
         @Override public Map<String, Aggregation> getAsMap() {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.getAsMap();
         }
 
         @Override public <A extends Aggregation> A get(final String name) {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.get(name);
         }
 
         @Override public XContentBuilder toXContent(final XContentBuilder builder, final Params params) throws IOException {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.toXContent(builder, params);
         }
 
         @Override public XContentBuilder toXContentInternal(final XContentBuilder builder, final Params params) throws IOException {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            return realizedAggregations.toXContentInternal(builder, params);
         }
 
         @Override public void readFrom(final StreamInput in) throws IOException {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            realizedAggregations.readFrom(in);
         }
 
         @Override public void writeTo(final StreamOutput out) throws IOException {
-            throw new NotImplementedException();
+            if (realizedAggregations == null) {
+                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
+            }
+            realizedAggregations.writeTo(out);
         }
 
+    }
+
+    private static InternalAggregations duckTypeParse(final Map<String, Object> map) {
+        // TODO try and parse
+        throw new NotImplementedException();
     }
 
     public static class NotImplementedException extends RuntimeException {

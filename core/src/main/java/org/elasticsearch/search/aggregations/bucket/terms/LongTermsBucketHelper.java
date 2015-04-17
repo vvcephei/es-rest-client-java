@@ -25,7 +25,7 @@ public class LongTermsBucketHelper {
 
         final Map<String, Object> subAggsMap = Maps.filterKeys(map, new Predicate<String>() {
             @Override public boolean apply(final String s) {
-                return properKeys.contains(s);
+                return !properKeys.contains(s);
             }
         });
 
