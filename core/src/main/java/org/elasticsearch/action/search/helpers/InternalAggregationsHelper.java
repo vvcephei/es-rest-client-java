@@ -1,168 +1,50 @@
 package org.elasticsearch.action.search.helpers;
 
+import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationManifest;
+import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.common.collect.ImmutableList;
-import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
-import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.DoubleTermsHelper;
-import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.LongTermsHelper;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.StringTermsHelper;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
+import static org.elasticsearch.common.base.Preconditions.checkArgument;
+import static org.elasticsearch.common.base.Preconditions.checkState;
 
 public class InternalAggregationsHelper {
-    public static InternalAggregations fromXContent(final Map<String, Object> map) {
-        if (!map.containsKey("aggregations")) {
+    public static InternalAggregations fromXContent(final Map<String, Object> map, final AggregationsManifest aggregationsManifest) {
+        if (!(map.containsKey("aggregations") || map.containsKey("aggs"))) {
             return new InternalAggregations(ImmutableList.<InternalAggregation>of());
         } else {
-            final Map<String, Object> aggregationsMap = nodeMapValue(map.get("aggregations"), String.class, Object.class);
-            return new UnrealizedAggregations(aggregationsMap);
+            final Map<String, Object> aggregationsMap;
+            if (map.containsKey("aggregations")) {
+                aggregationsMap = nodeMapValue(map.get("aggregations"), String.class, Object.class);
+            } else {
+                aggregationsMap = nodeMapValue(map.get("aggs"), String.class, Object.class);
+            }
+
+            return fromXContentUnwrapped(aggregationsMap, aggregationsManifest);
         }
     }
 
-    public static class UnrealizedAggregations extends InternalAggregations {
-        private final Map<String, Object> map;
-        private volatile InternalAggregations realizedAggregations = null;
-
-        /**
-         * Constructs a new addAggregation.
-         *
-         * @param aggregationsMap
-         */
-        public UnrealizedAggregations(final Map<String, Object> aggregationsMap) {
-            super(null); // we're completely shadowing InternalAggregations
-            this.map = aggregationsMap;
+    public static InternalAggregations fromXContentUnwrapped(final Map<String, Object> aggregationsMap, final AggregationsManifest aggregationsManifest) {
+        if (aggregationsManifest == null) {
+            checkArgument(aggregationsMap.isEmpty());
+            return new InternalAggregations(ImmutableList.<InternalAggregation>of());
         }
-
-        public DoubleTerms getDoubleTerms(final String name) {
-            if (map.containsKey(name)) {
-                final Map<String, Object> doubleTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
-                return DoubleTermsHelper.fromXContent(name, doubleTermsMap);
+        final ImmutableList.Builder<InternalAggregation> builder = ImmutableList.builder();
+        for (Map.Entry<String, AggregationManifest> entry : aggregationsManifest.getManifest().entrySet()) {
+            final String name = entry.getKey();
+            final String type = entry.getValue().getType();
+            checkState(aggregationsMap.containsKey(name));
+            if (type.equals("terms")) {
+                builder.add(TermsHelper.fromXContent(name, nodeMapValue(aggregationsMap.get(name), String.class, Object.class), entry.getValue().getSubAggregationsManifest()));
             } else {
-                return null;
+                throw new IllegalStateException("Unrecognized type: " + type);
             }
         }
-
-
-        public LongTerms getLongTerms(final String name) {
-            if (map.containsKey(name)) {
-                final Map<String, Object> longTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
-                return LongTermsHelper.fromXContent(name, longTermsMap);
-            } else {
-                return null;
-            }
-        }
-
-
-        public StringTerms getStringTerms(final String name) {
-            if (map.containsKey(name)) {
-                final Map<String, Object> longTermsMap = nodeMapValue(map.get(name), String.class, Object.class);
-                return StringTermsHelper.fromXContent(name, longTermsMap);
-            } else {
-                return null;
-            }
-        }
-
-        @Override public Iterator<Aggregation> iterator() {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.iterator();
-        }
-
-        @Override public List<Aggregation> asList() {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.asList();
-        }
-
-        @Override public Map<String, Aggregation> asMap() {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.asMap();
-        }
-
-        @Override public Map<String, Aggregation> getAsMap() {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.getAsMap();
-        }
-
-        @Override public <A extends Aggregation> A get(final String name) {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.get(name);
-        }
-
-        @Override public XContentBuilder toXContent(final XContentBuilder builder, final Params params) throws IOException {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.toXContent(builder, params);
-        }
-
-        @Override public XContentBuilder toXContentInternal(final XContentBuilder builder, final Params params) throws IOException {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            return realizedAggregations.toXContentInternal(builder, params);
-        }
-
-        @Override public void readFrom(final StreamInput in) throws IOException {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            realizedAggregations.readFrom(in);
-        }
-
-        @Override public void writeTo(final StreamOutput out) throws IOException {
-            if (realizedAggregations == null) {
-                realizedAggregations = InternalAggregationsHelper.duckTypeParse(map);
-            }
-            realizedAggregations.writeTo(out);
-        }
-
-    }
-
-    private static InternalAggregations duckTypeParse(final Map<String, Object> map) {
-        // TODO try and parse
-        throw new NotImplementedException();
-    }
-
-    public static class NotImplementedException extends RuntimeException {
-        public NotImplementedException() {
-        }
-
-        public NotImplementedException(final Throwable cause) {
-            super(cause);
-        }
-
-        public NotImplementedException(final String message) {
-            super(message);
-        }
-
-        public NotImplementedException(final String message, final Throwable cause) {
-            super(message, cause);
-        }
-
-        public NotImplementedException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
-            super(message, cause, enableSuppression, writableStackTrace);
-        }
+        return new InternalAggregations(builder.build());
     }
 }

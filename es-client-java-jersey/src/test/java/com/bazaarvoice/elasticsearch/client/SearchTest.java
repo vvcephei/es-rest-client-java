@@ -96,7 +96,7 @@ public class SearchTest extends JerseyHttpClientTest {
             final StringTerms aggregation = searchResponse.getAggregations().get(stringAggregationName);
 
 
-            final StringTerms stringTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getStringTerms(stringAggregationName);
+            final Terms stringTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(stringAggregationName);
             assertEquals(stringTerms.getBuckets().size(), 1);
             for (Terms.Bucket bucket : stringTerms.getBuckets()) {
                 assertEquals(bucket.getKey(), "value");
@@ -104,7 +104,7 @@ public class SearchTest extends JerseyHttpClientTest {
             }
         }
         {
-            final DoubleTerms doubleTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getDoubleTerms(doubleAggregationName);
+            final Terms doubleTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(doubleAggregationName);
             assertEquals(doubleTerms.getBuckets().size(), 1);
             for (Terms.Bucket bucket : doubleTerms.getBuckets()) {
                 assertEquals(bucket.getKeyAsNumber(), (Number) 2.3);
@@ -112,13 +112,13 @@ public class SearchTest extends JerseyHttpClientTest {
             }
         }
         {
-            final LongTerms longTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getLongTerms(longAggregationName);
+            final Terms longTerms = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(longAggregationName);
             assertEquals(longTerms.getBuckets().size(), 1);
             for (Terms.Bucket bucket : longTerms.getBuckets()) {
                 assertEquals(bucket.getKeyAsNumber(), (Number) 4l);
                 assertEquals(bucket.getDocCount(), 1);
                 // then test the subaggregation
-                final StringTerms stringTerms = TypedAggregations.wrap(bucket.getAggregations()).getStringTerms(subAggregationName);
+                final Terms stringTerms = TypedAggregations.wrap(bucket.getAggregations()).getTerms(subAggregationName);
                 assertEquals(stringTerms.getBuckets().size(), 1);
                 for (Terms.Bucket subBucket : stringTerms.getBuckets()) {
                     assertEquals(subBucket.getKey(), "value");

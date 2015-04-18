@@ -10,7 +10,12 @@ import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Joiner;
 import org.elasticsearch.common.util.concurrent.Futures;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.common.xcontent.json.JsonXContentParser;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.io.IOException;
+import java.util.Map;
 
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.booleanToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.scrollToString;
@@ -20,12 +25,20 @@ import static org.elasticsearch.common.base.Optional.fromNullable;
 /**
  * The inverse of {@link org.elasticsearch.rest.action.search.RestSearchAction}
  */
-public class SearchRest<T> extends AbstractRestClientAction<SearchRequest, SearchResponse> {
-    public SearchRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, SearchResponse> responseTransform) {
-        super(protocol, host, port, executor, responseTransform);
+public class SearchRest {
+    private final String protocol;
+    private final String host;
+    private final int port;
+    private final HttpExecutor executor;
+
+    public SearchRest(final String protocol, final String host, final int port, final HttpExecutor executor) {
+        this.protocol = protocol;
+        this.host = host;
+        this.port = port;
+        this.executor = executor;
     }
 
-    @Override public ListenableFuture<SearchResponse> act(final SearchRequest request) {
+    public ListenableFuture<SearchResponse> act(final SearchRequest request) {
         UrlBuilder url = UrlBuilder.create().protocol(protocol).host(host).port(port);
 
         if (request.indices() == null || request.indices().length == 0) {

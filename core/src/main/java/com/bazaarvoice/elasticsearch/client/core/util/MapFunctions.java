@@ -8,6 +8,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.jackson.core.util.ByteArrayBuilder;
 import org.elasticsearch.common.xcontent.XContentGenerator;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.common.xcontent.smile.SmileXContent;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,6 +19,18 @@ import java.util.Map;
  * {@link org.elasticsearch.common.xcontent.support.XContentMapValues}
  */
 public class MapFunctions {
+    public static Map<String, Object> toMapOrNull(final BytesReference bytes) {
+        try {
+            return SmileXContent.smileXContent.createParser(bytes).map();
+        } catch (IOException e) {
+            try {
+                return JsonXContent.jsonXContent.createParser(bytes).map();
+            } catch (IOException e1) {
+                return null;
+            }
+        }
+    }
+
     public static String nodeStringValue(@Nullable Object o) {
         Preconditions.checkNotNull(o);
         if (o instanceof String) {
