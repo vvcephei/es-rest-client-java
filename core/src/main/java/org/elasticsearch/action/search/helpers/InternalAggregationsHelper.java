@@ -41,6 +41,24 @@ public class InternalAggregationsHelper {
             checkState(aggregationsMap.containsKey(name));
             if (type.equals("terms")) {
                 builder.add(TermsHelper.fromXContent(name, nodeMapValue(aggregationsMap.get(name), String.class, Object.class), entry.getValue().getSubAggregationsManifest()));
+            } else if (type.equals("geohash_grid")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("date_histogram")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("histogram")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("date_range")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("geo_distance")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("ip_range")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("significant_terms")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("extended_stats")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("value_count")) {
+                throw new RuntimeException("not implemented");
             } else {
                 throw new IllegalStateException("Unrecognized type: " + type);
             }

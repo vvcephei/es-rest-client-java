@@ -14,8 +14,7 @@ import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRange;
 import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistance;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
-import org.elasticsearch.search.aggregations.bucket.significant.SignificantLongTerms;
-import org.elasticsearch.search.aggregations.bucket.significant.SignificantStringTerms;
+import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
@@ -46,87 +45,89 @@ public class TypedAggregations {
 
     // ValueCount
 
-    public ValueCount getValueCount(final String name) { return null;}
-
+    public ValueCount getValueCount(final String name) {
+        return aggregations.get(name);
+    }
 
     // Significant
 
-    public SignificantLongTerms getSignificantLongTerms(final String name) {
-        return null;
-    }
-
-    public SignificantStringTerms getSignificantStringTerms(final String name) {
-        return null;
+    public SignificantTerms getSignificantTerms(final String name) {
+        return aggregations.get(name);
     }
 
     // Range
 
     public DateRange getDateRange(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     public GeoDistance getGeoDistance(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     public IPv4Range getIPv4Range(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
-    // Nested
-
-    public Nested getNested(final String name) {
-        return null;
-    }
-
-    public ReverseNested getReverseNested(final String name) {
-        return null;
-    }
-
-    // Missing
-
-    public Missing getMissing(final String name) {
-        return null;
-    }
 
     // Histogram
 
     public DateHistogram getDateHistogram(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     public Histogram getHistogram(final String name) {
         // This is InternalHistogram.class
-        return null;
-    }
-
-    // Global
-
-    public Global getGlobal(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     // GeoGrid
 
     public GeoHashGrid getGeoHashGrid(final String name) {
-        return null;
+        return aggregations.get(name);
     }
+
+    // ???????????????????????????
+
+    // Nested
+
+    public Nested getNested(final String name) {
+        return aggregations.get(name);
+    }
+
+    public ReverseNested getReverseNested(final String name) {
+        return aggregations.get(name);
+    }
+
+    // Missing
+
+    public Missing getMissing(final String name) {
+        return aggregations.get(name);
+    }
+
+
+    // Global
+
+    public Global getGlobal(final String name) {
+        return aggregations.get(name);
+    }
+
 
     // Filters
 
     public Filters getFilters(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     // Filter
 
     public Filter getFilter(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 
     // Children
 
     public Children getChildren(final String name) {
-        return null;
+        return aggregations.get(name);
     }
 }
