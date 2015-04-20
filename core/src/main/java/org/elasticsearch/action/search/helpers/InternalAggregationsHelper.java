@@ -9,6 +9,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
 import org.elasticsearch.search.aggregations.metrics.max.MaxHelper;
 import org.elasticsearch.search.aggregations.metrics.min.MinHelper;
+import org.elasticsearch.search.aggregations.metrics.stats.StatsHelper;
+import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsHelper;
 import org.elasticsearch.search.aggregations.metrics.sum.SumHelper;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountHelper;
 
@@ -59,9 +61,9 @@ public class InternalAggregationsHelper {
             } else if (type.equals("sum")) {
                 builder.add(SumHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("stats")) {
-                throw new RuntimeException("not implemented");
+                builder.add(StatsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("extended_stats")) {
-                throw new RuntimeException("not implemented");
+                builder.add(ExtendedStatsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("percentiles")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("cardinality")) {

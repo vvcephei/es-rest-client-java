@@ -17,7 +17,10 @@ import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.elasticsearch.search.aggregations.metrics.stats.Stats;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
 
@@ -58,6 +61,20 @@ public class TypedAggregations {
     public Min getMin(final String name) {
         return aggregations.get(name);
     }
+
+    public Max getMax(final String name) {
+        return aggregations.get(name);
+    }
+
+    public Sum getSum(final String name) {
+        return aggregations.get(name);
+    }
+
+    public Stats getStats(final String name) {
+        return aggregations.get(name);
+    }
+
+
 
     // Significant
 
