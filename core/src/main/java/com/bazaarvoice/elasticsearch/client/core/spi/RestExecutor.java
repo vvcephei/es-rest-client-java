@@ -10,9 +10,9 @@ import java.net.URL;
  * <p/>
  * Implementers can use any http client they like, configured however they want.
  */
-public interface HttpExecutor {
-    public ListenableFuture<HttpResponse> get(URL url);
-    public ListenableFuture<HttpResponse> delete(URL url);
-    public ListenableFuture<HttpResponse> put(URL url, InputStream body);
-    public ListenableFuture<HttpResponse> post(URL url, InputStream body);
+public interface RestExecutor {
+    public ListenableFuture<RestResponse> get(URL url);
+    public ListenableFuture<RestResponse> delete(URL url);
+    public ListenableFuture<RestResponse> put(URL url, InputStream body);
+    public ListenableFuture<RestResponse> post(URL url, InputStream body);
 }

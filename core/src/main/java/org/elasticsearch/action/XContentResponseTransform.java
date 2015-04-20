@@ -1,6 +1,6 @@
 package org.elasticsearch.action;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.InputStreams;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * A function that transforms {@link com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse}s
+ * A function that transforms {@link RestResponse}s
  * whose response body is some kind of XContent into the desired type.
  * <p/>
  * You must supply the implementation of fromXContent by passing a
@@ -18,23 +18,23 @@ import java.util.Map;
  *
  * @param <R> The desired output format.
  */
-public class XContentResponseTransform<R> implements Function<HttpResponse, R> {
+public class XContentResponseTransform<R> implements Function<RestResponse, R> {
     private final FromXContent<R> unmarshaller;
 
     public XContentResponseTransform(FromXContent<R> unmarshaller) {
         this.unmarshaller = unmarshaller;
     }
 
-    @Override public R apply(final HttpResponse httpResponse) {
+    @Override public R apply(final RestResponse restResponse) {
         try {
             //TODO check REST status and "ok" field and handle failure
             final Map<String, Object> map;
-            if (httpResponse.contentTypeLowerCase().contains("application/smile")) {
-                map = SmileXContent.smileXContent.createParser(httpResponse.response()).mapAndClose();
+            if (restResponse.contentTypeLowerCase().contains("application/smile")) {
+                map = SmileXContent.smileXContent.createParser(restResponse.response()).mapAndClose();
             } else {
                 // assume json?
                 // not sure why we sometimes get a bunch of 0x0 chars in the response?
-                map = JsonXContent.jsonXContent.createParser(InputStreams.stripNullChars(httpResponse.response())).mapAndClose();
+                map = JsonXContent.jsonXContent.createParser(InputStreams.stripNullChars(restResponse.response())).mapAndClose();
             }
             if (map.containsKey("error")) {
                 // FIXME use the right exception. see https://github.com/bazaarvoice/es-client-java/issues/3

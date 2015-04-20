@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-public class IndexTest extends JerseyHttpClientTest {
+public class IndexTest extends JerseyRestClientTest {
 
     public static final String ID = "index-test-id-1";
 

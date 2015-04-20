@@ -1,17 +1,14 @@
 package com.bazaarvoice.elasticsearch.client;
 
-import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetRequestBuilder;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-public class DeleteTest extends JerseyHttpClientTest {
+public class DeleteTest extends JerseyRestClientTest {
 
     public static final String ID = "delete-test-id-1";
 

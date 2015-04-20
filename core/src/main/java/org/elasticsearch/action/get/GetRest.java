@@ -1,7 +1,7 @@
 package org.elasticsearch.action.get;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestExecutor;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder;
 import org.elasticsearch.action.AbstractRestClientAction;
 import org.elasticsearch.common.base.Function;
@@ -18,7 +18,7 @@ import static org.elasticsearch.common.base.Optional.fromNullable;
  * @param <ResponseType>
  */
 public class GetRest<ResponseType> extends AbstractRestClientAction<GetRequest, ResponseType> {
-    public GetRest(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, ResponseType> responseTransform) {
+    public GetRest(final String protocol, final String host, final int port, final RestExecutor executor, final Function<RestResponse, ResponseType> responseTransform) {
         super(protocol, host, port, executor, responseTransform);
     }
 

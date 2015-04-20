@@ -42,12 +42,12 @@ Implemented:
 |-------|-----|
 |7.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
 
-### HttpExecutor?
+### RestExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
 and I don't want to make those choices for you. The core client defines an SPI that covers everything it needs to do over HTTP.
 
-* ```com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor``` is an abstraction of something that makes asynch HTTP requests.
-* ```com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse``` is an abstraction of... HTTP responses.
+* ```com.bazaarvoice.elasticsearch.client.core.spi.RestExecutor``` is an abstraction of something that makes asynch REST requests.
+* ```com.bazaarvoice.elasticsearch.client.core.spi.RestResponse``` is an abstraction of... REST responses.
 
 Other modules can implement these however they please. I'm providing a Jersey implementation right now, just because it's easy to do a basic configuration.
 
