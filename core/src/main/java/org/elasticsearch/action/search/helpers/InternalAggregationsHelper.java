@@ -7,6 +7,9 @@ import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
+import org.elasticsearch.search.aggregations.metrics.max.MaxHelper;
+import org.elasticsearch.search.aggregations.metrics.min.MinHelper;
+import org.elasticsearch.search.aggregations.metrics.sum.SumHelper;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountHelper;
 
 import java.util.Map;
@@ -49,21 +52,53 @@ public class InternalAggregationsHelper {
                 builder.add(ValueCountHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("avg")) {
                 builder.add(AvgHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
-            } else if (type.equals("geohash_grid")) {
+            } else if (type.equals("min")) {
+                builder.add(MinHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("max")) {
+                builder.add(MaxHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("sum")) {
+                builder.add(SumHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("stats")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("date_histogram")) {
+            } else if (type.equals("extended_stats")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("histogram")) {
+            } else if (type.equals("percentiles")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("date_range")) {
+            } else if (type.equals("cardinality")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("geo_distance")) {
+            } else if (type.equals("geo_bounds")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("ip_range")) {
+            } else if (type.equals("top_hits")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("scripted_metric")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("global")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("filter")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("missing")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("nested")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("reverse_nested")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("children")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("significant_terms")) {
                 throw new RuntimeException("not implemented");
-            } else if (type.equals("extended_stats")) {
+            } else if (type.equals("range")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("date_range")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("ip_range")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("histogram")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("date_histogram")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("geo_distance")) {
+                throw new RuntimeException("not implemented");
+            } else if (type.equals("geohash_grid")) {
                 throw new RuntimeException("not implemented");
             } else {
                 throw new IllegalStateException("Unrecognized type: " + type);

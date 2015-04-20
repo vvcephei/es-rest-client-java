@@ -1,4 +1,4 @@
-package org.elasticsearch.search.aggregations.metrics.avg;
+package org.elasticsearch.search.aggregations.metrics.max;
 
 import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.action.search.helpers.AbstractInternalAggregation;
@@ -8,17 +8,17 @@ import java.util.Map;
 
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeDoubleValue;
 
-public class AvgHelper {
+public class MaxHelper {
     public static InternalAggregation fromXContent(final String name, final Map<String, Object> map, final AggregationsManifest manifest) {
         final double value = nodeDoubleValue(map.get("value"));
-        return new ComputedAvg(name, value);
+        return new MaxImpl(name, value);
     }
 
-    private final static class ComputedAvg extends AbstractInternalAggregation implements Avg {
+    private static final class MaxImpl extends AbstractInternalAggregation implements Max {
 
-        private double value;
+        private final double value;
 
-        public ComputedAvg(final String name, final double value) {
+        public MaxImpl(final String name, final double value) {
             super(name);
             this.value = value;
         }
