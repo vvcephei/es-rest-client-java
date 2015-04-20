@@ -6,8 +6,11 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.avg.Avg;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.Suggest;
@@ -43,6 +46,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String doubleAggregationName = "mytermsagg2";
         final String longAggregationName = "mytermsagg3";
         final String subAggregationName = "mytermsagg3-sub";
+        final String countAggName = "mycountagg1";
+        final String avgAggName = "myavgagg1";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -52,6 +57,8 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(terms(stringAggregationName).field("field"));
         searchRequestBuilder.addAggregation(terms(doubleAggregationName).field("dfield"));
         searchRequestBuilder.addAggregation(terms(longAggregationName).field("ifield").subAggregation(terms(subAggregationName).field("field")));
+        searchRequestBuilder.addAggregation(AggregationBuilders.count(countAggName).field("field"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.avg(avgAggName).field("ifield"));
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
 
@@ -122,6 +129,14 @@ public class SearchTest extends JerseyRestClientTest {
                     assertEquals(subBucket.getDocCount(), 1);
                 }
             }
+        }
+        {
+            final ValueCount valueCount = TypedAggregations.wrap(searchResponse.getAggregations()).getValueCount(countAggName);
+            assertEquals(valueCount.getValue(), 1);
+        }
+        {
+            final Avg valueCount = TypedAggregations.wrap(searchResponse.getAggregations()).getAvg(avgAggName);
+            assertEquals(valueCount.getValue(), 4.0);
         }
 
 

@@ -19,14 +19,14 @@ import java.util.Map;
  * {@link org.elasticsearch.common.xcontent.support.XContentMapValues}
  */
 public class MapFunctions {
-    public static Map<String, Object> toMapOrNull(final BytesReference bytes) {
+    public static Map<String, Object> toMap(final BytesReference bytes) {
         try {
             return SmileXContent.smileXContent.createParser(bytes).map();
         } catch (IOException e) {
             try {
                 return JsonXContent.jsonXContent.createParser(bytes).map();
             } catch (IOException e1) {
-                return null;
+                throw new RuntimeException("Couldn't parse bytes as either SMILE or JSON", e);
             }
         }
     }

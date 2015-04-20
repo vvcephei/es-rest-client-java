@@ -6,6 +6,8 @@ import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
+import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountHelper;
 
 import java.util.Map;
 
@@ -39,8 +41,14 @@ public class InternalAggregationsHelper {
             final String name = entry.getKey();
             final String type = entry.getValue().getType();
             checkState(aggregationsMap.containsKey(name));
+            final Map<String, Object> subAggregationMap = nodeMapValue(aggregationsMap.get(name), String.class, Object.class);
+            final AggregationsManifest subAggregationsManifest = entry.getValue().getSubAggregationsManifest();
             if (type.equals("terms")) {
-                builder.add(TermsHelper.fromXContent(name, nodeMapValue(aggregationsMap.get(name), String.class, Object.class), entry.getValue().getSubAggregationsManifest()));
+                builder.add(TermsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("value_count")) {
+                builder.add(ValueCountHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("avg")) {
+                builder.add(AvgHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geohash_grid")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("date_histogram")) {
@@ -56,8 +64,6 @@ public class InternalAggregationsHelper {
             } else if (type.equals("significant_terms")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("extended_stats")) {
-                throw new RuntimeException("not implemented");
-            } else if (type.equals("value_count")) {
                 throw new RuntimeException("not implemented");
             } else {
                 throw new IllegalStateException("Unrecognized type: " + type);

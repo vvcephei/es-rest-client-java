@@ -11,7 +11,7 @@ import org.elasticsearch.search.SearchShardTarget;
 
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.toMapOrNull;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.toMap;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.base.Preconditions.checkState;
@@ -26,7 +26,7 @@ public class SearchResponseHelper implements FromXContent<SearchResponse> {
     final AggregationsManifest aggregationsManifest;
 
     public SearchResponseHelper(final SearchRequest request) {
-        final Map<String, Object> source = toMapOrNull(request.source());
+        final Map<String, Object> source = toMap(request.source());
         if (source == null) {
             aggregationsManifest = null;
         } else if (source.containsKey("aggregations")) {

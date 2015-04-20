@@ -16,6 +16,7 @@ import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistanc
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
 
@@ -43,9 +44,13 @@ public class TypedAggregations {
         return aggregations.get(name);
     }
 
-    // ValueCount
+    // Stats
 
     public ValueCount getValueCount(final String name) {
+        return aggregations.get(name);
+    }
+
+    public Avg getAvg(final String name) {
         return aggregations.get(name);
     }
 
