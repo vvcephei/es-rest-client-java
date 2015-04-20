@@ -20,6 +20,7 @@ import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
+import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
@@ -71,6 +72,10 @@ public class TypedAggregations {
     }
 
     public Stats getStats(final String name) {
+        return aggregations.get(name);
+    }
+
+    public ExtendedStats getExtendedStats(final String name) {
         return aggregations.get(name);
     }
 

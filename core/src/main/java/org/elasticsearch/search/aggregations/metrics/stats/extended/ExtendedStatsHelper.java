@@ -18,6 +18,7 @@ public class ExtendedStatsHelper {
         final double max = nodeDoubleValue(map.get("max"));
         final double sumOfSqrs = nodeDoubleValue(map.get("sum_of_squares"));
         final Map<String, Object> std_deviation_bounds = nodeMapValue(map.get("std_deviation_bounds"), String.class, Object.class);
+        // TODO ES could serialized sigma and spare us this calculation. I don't think there's a reason to hide it.
         // stdDevUpper = getAvg() + (getStdDeviation() * sigma)
         final double upper = nodeDoubleValue(std_deviation_bounds.get("upper"));
         final double avg = sum / count;
