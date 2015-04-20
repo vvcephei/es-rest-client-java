@@ -1,5 +1,4 @@
-import com.bazaarvoice.elasticsearch.client.JerseyHttpClientFactory;
-import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
+import com.bazaarvoice.elasticsearch.client.JerseyRestClientFactory;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -16,9 +15,6 @@ import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.DoubleTerms;
-import org.elasticsearch.search.aggregations.metrics.valuecount.InternalValueCount;
-import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
@@ -34,10 +30,10 @@ import java.util.concurrent.Executors;
  * TODO: set up a real testing framework. See https://github.com/bazaarvoice/es-client-java/issues/10
  * <p/>
  * How to use:
- * First run {@link HttpClientPlayground.StartEs#main(String[])}, and leave it running.
- * Then, you can run {@link HttpClientPlayground#main(String[])} as many times as you please.
+ * First run {@link RestClientPlayground.StartEs#main(String[])}, and leave it running.
+ * Then, you can run {@link RestClientPlayground#main(String[])} as many times as you please.
  */
-public class HttpClientPlayground {
+public class RestClientPlayground {
 
     private static final String protocol = "http";
     private static final String host = "localhost";
@@ -59,7 +55,7 @@ public class HttpClientPlayground {
     public static void main(String[] args) {
 
         final ExecutorService executor = Executors.newCachedThreadPool();
-        final Client client = JerseyHttpClientFactory.client(protocol, host, port, com.sun.jersey.api.client.Client.create(), executor);
+        final Client client = JerseyRestClientFactory.client(protocol, host, port, com.sun.jersey.api.client.Client.create(), executor);
 
         System.out.println("INDEX");
 

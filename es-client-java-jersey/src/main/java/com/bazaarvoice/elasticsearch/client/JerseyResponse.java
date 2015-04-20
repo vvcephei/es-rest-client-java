@@ -1,6 +1,6 @@
 package com.bazaarvoice.elasticsearch.client;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import com.sun.jersey.api.client.ClientResponse;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.collect.ImmutableSet;
@@ -13,9 +13,9 @@ import static org.elasticsearch.common.collect.Iterables.transform;
 
 /**
  * Adapts a Jersey {@link com.sun.jersey.api.client.ClientResponse}
- * to {@link com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse}.
+ * to {@link RestResponse}.
  */
-class JerseyResponse implements HttpResponse {
+class JerseyResponse implements RestResponse {
     private final ClientResponse delegate;
     private static final Function<String, String> toLowerCaseFn = new Function<String, String>() {
         @Override public String apply(final String s) {

@@ -1,21 +1,13 @@
 package org.elasticsearch.action.search;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestExecutor;
 import com.bazaarvoice.elasticsearch.client.core.util.InputStreams;
 import com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder;
-import org.elasticsearch.action.AbstractRestClientAction;
 import org.elasticsearch.action.XContentResponseTransform;
-import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Joiner;
 import org.elasticsearch.common.util.concurrent.Futures;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
-import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.elasticsearch.common.xcontent.json.JsonXContentParser;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.io.IOException;
-import java.util.Map;
 
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.booleanToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.scrollToString;
@@ -29,9 +21,9 @@ public class SearchRest {
     private final String protocol;
     private final String host;
     private final int port;
-    private final HttpExecutor executor;
+    private final RestExecutor executor;
 
-    public SearchRest(final String protocol, final String host, final int port, final HttpExecutor executor) {
+    public SearchRest(final String protocol, final String host, final int port, final RestExecutor executor) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
