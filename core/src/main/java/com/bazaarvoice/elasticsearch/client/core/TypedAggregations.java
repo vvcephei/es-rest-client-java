@@ -19,6 +19,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
+import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
@@ -79,7 +81,17 @@ public class TypedAggregations {
         return aggregations.get(name);
     }
 
+    // Percentiles
 
+
+    public Percentiles getPercentiles(final String name) {
+        return aggregations.get(name);
+    }
+
+
+    public PercentileRanks getPercentileRanks(final String name) {
+        return aggregations.get(name);
+    }
 
     // Significant
 
@@ -162,4 +174,5 @@ public class TypedAggregations {
     public Children getChildren(final String name) {
         return aggregations.get(name);
     }
+
 }

@@ -11,6 +11,9 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
+import org.elasticsearch.search.aggregations.metrics.percentiles.Percentile;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
+import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
@@ -22,6 +25,7 @@ import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,6 +59,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String sumAggName = "mySumAgg1";
         final String statsAggName = "myStatsAgg1";
         final String estatsAggName = "myEStatsAgg1";
+        final String percentilesAggName = "myPercentilesAgg1";
+        final String percentileRanksAggName = "myPercentileRanksAgg1";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -71,6 +77,8 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(AggregationBuilders.sum(sumAggName).field("ifield"));
         searchRequestBuilder.addAggregation(AggregationBuilders.stats(statsAggName).field("ifield"));
         searchRequestBuilder.addAggregation(AggregationBuilders.extendedStats(estatsAggName).field("ifield"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.percentiles(percentilesAggName).field("ifield"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.percentileRanks(percentileRanksAggName).field("ifield").percentiles(0,4,8));
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
 
@@ -163,6 +171,20 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.getStdDeviationBound(ExtendedStats.Bounds.UPPER), Double.NaN);
             assertEquals(agg.getSumOfSquares(), 16.0);
             assertEquals(agg.getVariance(), 0.0);
+        }
+
+        {
+            final Percentiles agg = TypedAggregations.wrap(searchResponse.getAggregations()).getPercentiles(percentilesAggName);
+            assertEquals(agg.percentile(100), 4.0);
+        }
+
+        {
+            final PercentileRanks agg = TypedAggregations.wrap(searchResponse.getAggregations()).getPercentileRanks(percentileRanksAggName);
+            assertEquals(agg.percent(0.0), 0.0);
+            assertEquals(agg.percent(2.0), 50.0);
+            assertEquals(agg.percent(4.0), 100.0);
+            assertEquals(agg.percent(8.0), 100.0);
+            assertEquals(agg.percent(10.0), 100.0);
         }
 
 

@@ -9,6 +9,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
 import org.elasticsearch.search.aggregations.metrics.max.MaxHelper;
 import org.elasticsearch.search.aggregations.metrics.min.MinHelper;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanksHelper;
+import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesHelper;
 import org.elasticsearch.search.aggregations.metrics.stats.StatsHelper;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsHelper;
 import org.elasticsearch.search.aggregations.metrics.sum.SumHelper;
@@ -65,7 +67,9 @@ public class InternalAggregationsHelper {
             } else if (type.equals("extended_stats")) {
                 builder.add(ExtendedStatsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("percentiles")) {
-                throw new RuntimeException("not implemented");
+                builder.add(PercentilesHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("percentile_ranks")) {
+                builder.add(PercentileRanksHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("cardinality")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("geo_bounds")) {
