@@ -17,6 +17,8 @@ import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBounds;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
@@ -90,6 +92,19 @@ public class TypedAggregations {
 
 
     public PercentileRanks getPercentileRanks(final String name) {
+        return aggregations.get(name);
+    }
+
+    // Cardinality
+
+    public Cardinality getCardinality(final String name) {
+        return aggregations.get(name);
+    }
+
+    // GeoBounds
+
+
+    public GeoBounds getGeoBounds(final String name) {
         return aggregations.get(name);
     }
 

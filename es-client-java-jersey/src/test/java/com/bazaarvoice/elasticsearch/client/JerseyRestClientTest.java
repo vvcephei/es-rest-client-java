@@ -21,10 +21,6 @@ public class JerseyRestClientTest {
     private static Node node;
     private static Client client;
 
-    protected Client restClient() {
-        return client;
-    }
-
     @BeforeSuite
     public static void setup() {
         final Node node = buildNode();
@@ -54,6 +50,12 @@ public class JerseyRestClientTest {
         nodeBuilder.settings().put("index.number_of_replicas", 0);
         return nodeBuilder.build();
     }
+
+    protected Client restClient() {
+        return client;
+    }
+
+    protected Client nodeClient() { return node.client();}
 
     @AfterSuite
     public void teardown() {

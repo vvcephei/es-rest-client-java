@@ -6,7 +6,9 @@ import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
+import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
+import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsHelper;
 import org.elasticsearch.search.aggregations.metrics.max.MaxHelper;
 import org.elasticsearch.search.aggregations.metrics.min.MinHelper;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanksHelper;
@@ -71,9 +73,9 @@ public class InternalAggregationsHelper {
             } else if (type.equals("percentile_ranks")) {
                 builder.add(PercentileRanksHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("cardinality")) {
-                throw new RuntimeException("not implemented");
+                builder.add(CardinalityHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geo_bounds")) {
-                throw new RuntimeException("not implemented");
+                builder.add(GeoBoundsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("top_hits")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("scripted_metric")) {

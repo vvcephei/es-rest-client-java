@@ -4,14 +4,16 @@ import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
+import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBounds;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
-import org.elasticsearch.search.aggregations.metrics.percentiles.Percentile;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
@@ -25,7 +27,7 @@ import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Iterator;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,11 +40,27 @@ public class SearchTest extends JerseyRestClientTest {
 
     public static final String INDEX = "search-test-idx";
     public static final String TYPE = "search-test-type";
-    public static final String ID = "search-test-id-1";
+    public static final String ID1 = "search-test-id-1";
+    public static final String ID2 = "search-test-id-2";
 
     @BeforeClass
-    public void setupSearchTest() {
-        restClient().prepareIndex(INDEX, TYPE, ID).setSource("field", "value", "dfield", 2.3, "ifield", 4).setRefresh(true).execute().actionGet();
+    public void setupSearchTest() throws IOException {
+        nodeClient().admin().indices().prepareCreate(INDEX).addMapping(TYPE,
+            ImmutableMap.<String, Object>of(
+                "properties", ImmutableMap.of(
+                    "field", ImmutableMap.of("type", "string"),
+                    "dfield", ImmutableMap.of("type", "double"),
+                    "ifield", ImmutableMap.of("type", "long"),
+                    "location", ImmutableMap.of("type", "geo_point")
+                ))
+        ).execute().actionGet();
+
+        restClient().prepareIndex(INDEX, TYPE, ID1).setSource(
+            "field", "value",
+            "dfield", 2.3,
+            "ifield", 4,
+            "location", "41.12,-71.34"
+        ).setRefresh(true).execute().actionGet();
     }
 
     @Test public void testSearch() {
@@ -61,6 +79,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String estatsAggName = "myEStatsAgg1";
         final String percentilesAggName = "myPercentilesAgg1";
         final String percentileRanksAggName = "myPercentileRanksAgg1";
+        final String cardinalityAggName = "myCardinalityAgg1";
+        final String geoBoundsAggName = "myGeoBoundsAgg1";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -78,7 +98,10 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(AggregationBuilders.stats(statsAggName).field("ifield"));
         searchRequestBuilder.addAggregation(AggregationBuilders.extendedStats(estatsAggName).field("ifield"));
         searchRequestBuilder.addAggregation(AggregationBuilders.percentiles(percentilesAggName).field("ifield"));
-        searchRequestBuilder.addAggregation(AggregationBuilders.percentileRanks(percentileRanksAggName).field("ifield").percentiles(0,4,8));
+        searchRequestBuilder.addAggregation(AggregationBuilders.percentileRanks(percentileRanksAggName).field("ifield").percentiles(0, 4, 8));
+        searchRequestBuilder.addAggregation(AggregationBuilders.cardinality(cardinalityAggName).field("field"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.geoBounds(geoBoundsAggName).field("location"));
+
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
 
@@ -186,6 +209,18 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.percent(8.0), 100.0);
             assertEquals(agg.percent(10.0), 100.0);
         }
+        {
+            final Cardinality agg = TypedAggregations.wrap(searchResponse.getAggregations()).getCardinality(cardinalityAggName);
+            assertEquals(agg.getValue(), 1);
+        }
+        {
+            final GeoBounds agg = TypedAggregations.wrap(searchResponse.getAggregations()).getGeoBounds(geoBoundsAggName);
+//            "location", ImmutableMap.of("lat", 41.12, "lon", -71.34)
+            assertEquals(agg.topLeft().lat(), 41.12);
+            assertEquals(agg.topLeft().lon(), -71.34);
+            assertEquals(agg.bottomRight().lat(), 41.12);
+            assertEquals(agg.bottomRight().lon(), -71.34);
+        }
 
 
         final Suggest.Suggestion<Suggest.Suggestion.Entry<Suggest.Suggestion.Entry.Option>> suggestion = searchResponse.getSuggest().getSuggestion(suggestionName);
@@ -211,7 +246,7 @@ public class SearchTest extends JerseyRestClientTest {
             /* ignoring, unserialized...*/
             System.out.println("type: " + Objects.toString(hit.getType()));
             assertEquals(hit.getType(), TYPE);
-            assertEquals(hit.getId(), ID);
+            assertEquals(hit.getId(), ID1);
             /* ignoring, unserialized...*/
             System.out.println("source: " + Objects.toString(hit.getSourceAsString()));
             assertEquals(hit.getSource().get("field"), "value");
