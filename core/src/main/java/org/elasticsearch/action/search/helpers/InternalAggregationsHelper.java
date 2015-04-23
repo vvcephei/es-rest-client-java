@@ -13,9 +13,11 @@ import org.elasticsearch.search.aggregations.metrics.max.MaxHelper;
 import org.elasticsearch.search.aggregations.metrics.min.MinHelper;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanksHelper;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesHelper;
+import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetricHelper;
 import org.elasticsearch.search.aggregations.metrics.stats.StatsHelper;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsHelper;
 import org.elasticsearch.search.aggregations.metrics.sum.SumHelper;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsHelper;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountHelper;
 
 import java.util.Map;
@@ -77,9 +79,9 @@ public class InternalAggregationsHelper {
             } else if (type.equals("geo_bounds")) {
                 builder.add(GeoBoundsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("top_hits")) {
-                throw new RuntimeException("not implemented");
+                builder.add(TopHitsHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("scripted_metric")) {
-                throw new RuntimeException("not implemented");
+                builder.add(ScriptedMetricHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("global")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("filter")) {

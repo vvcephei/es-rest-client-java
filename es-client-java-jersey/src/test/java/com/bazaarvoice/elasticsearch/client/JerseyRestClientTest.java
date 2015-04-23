@@ -48,6 +48,7 @@ public class JerseyRestClientTest {
         nodeBuilder.settings().put("path.home", homeDirectory.getPath());
         nodeBuilder.settings().put("path.logs", new File(homeDirectory, "logs").getPath());
         nodeBuilder.settings().put("index.number_of_replicas", 0);
+        nodeBuilder.settings().put("script.disable_dynamic", false);
         return nodeBuilder.build();
     }
 

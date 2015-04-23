@@ -29,7 +29,12 @@
             <version>${jersey-client.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
 
         <!-- testing -->
 
@@ -39,5 +44,7 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
+
+
     </dependencies>
 </project>

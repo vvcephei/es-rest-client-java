@@ -23,9 +23,11 @@ import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
+import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetric;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 
 
@@ -103,10 +105,17 @@ public class TypedAggregations {
 
     // GeoBounds
 
-
     public GeoBounds getGeoBounds(final String name) {
         return aggregations.get(name);
     }
+
+    // TopHits
+
+    public TopHits getTopHits(final String name) { return aggregations.get(name); }
+
+    // ScriptedMetric
+
+    public ScriptedMetric getScriptedMetric(final String name) { return aggregations.get(name); }
 
     // Significant
 

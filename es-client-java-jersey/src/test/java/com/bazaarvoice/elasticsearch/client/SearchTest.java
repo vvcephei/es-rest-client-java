@@ -16,9 +16,11 @@ import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentileRanks;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
+import org.elasticsearch.search.aggregations.metrics.scripted.ScriptedMetric;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
@@ -29,6 +31,7 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
@@ -81,6 +84,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String percentileRanksAggName = "myPercentileRanksAgg1";
         final String cardinalityAggName = "myCardinalityAgg1";
         final String geoBoundsAggName = "myGeoBoundsAgg1";
+        final String topHitsAggName = "myTopHitsAgg1";
+        final String scriptAggName = "myScriptAgg1";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -101,6 +106,10 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(AggregationBuilders.percentileRanks(percentileRanksAggName).field("ifield").percentiles(0, 4, 8));
         searchRequestBuilder.addAggregation(AggregationBuilders.cardinality(cardinalityAggName).field("field"));
         searchRequestBuilder.addAggregation(AggregationBuilders.geoBounds(geoBoundsAggName).field("location"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.topHits(topHitsAggName).setFetchSource(true));
+        searchRequestBuilder.addAggregation(AggregationBuilders.scriptedMetric(scriptAggName).lang("groovy")
+                .mapScript("_agg['touch'] = 1")
+        );
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -220,6 +229,27 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.topLeft().lon(), -71.34);
             assertEquals(agg.bottomRight().lat(), 41.12);
             assertEquals(agg.bottomRight().lon(), -71.34);
+        }
+
+        {
+            final TopHits agg = TypedAggregations.wrap(searchResponse.getAggregations()).getTopHits(topHitsAggName);
+            assertEquals(agg.getHits().getTotalHits(), 1);
+            final SearchHit hit = agg.getHits().getAt(0);
+            assertEquals(hit.index(), INDEX);
+            assertEquals(hit.getType(), TYPE);
+            assertEquals(hit.getId(), ID1);
+            assertEquals(hit.getSource().get("field"), "value");
+        }
+
+        {
+            final ScriptedMetric agg = TypedAggregations.wrap(searchResponse.getAggregations()).getScriptedMetric(scriptAggName);
+            int sum = 0;
+            for (Map<String, Integer> bucket : (List<Map<String, Integer>>) agg.aggregation()) {
+                if (!bucket.isEmpty()) {
+                    sum += bucket.get("touch");
+                }
+            }
+            assertEquals(sum, 1);
         }
 
 
