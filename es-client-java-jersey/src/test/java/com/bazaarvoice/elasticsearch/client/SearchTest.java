@@ -8,6 +8,7 @@ import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
@@ -86,6 +87,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String geoBoundsAggName = "myGeoBoundsAgg1";
         final String topHitsAggName = "myTopHitsAgg1";
         final String scriptAggName = "myScriptAgg1";
+        final String globalAggName = "myGlobalAgg1";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -110,6 +112,7 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(AggregationBuilders.scriptedMetric(scriptAggName).lang("groovy")
                 .mapScript("_agg['touch'] = 1")
         );
+        searchRequestBuilder.addAggregation(AggregationBuilders.global(globalAggName).subAggregation(terms(subAggregationName).field("field")));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -250,6 +253,18 @@ public class SearchTest extends JerseyRestClientTest {
                 }
             }
             assertEquals(sum, 1);
+        }
+
+        {
+            final Global agg = TypedAggregations.wrap(searchResponse.getAggregations()).getGlobal(globalAggName);
+            assertEquals(agg.getDocCount(), 1);
+            // then test the subaggregation
+            final Terms aubAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName);
+            assertEquals(aubAgg.getBuckets().size(), 1);
+            for (Terms.Bucket subBucket : aubAgg.getBuckets()) {
+                assertEquals(subBucket.getKey(), "value");
+                assertEquals(subBucket.getDocCount(), 1);
+            }
         }
 
 

@@ -5,6 +5,7 @@ import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
@@ -83,7 +84,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("scripted_metric")) {
                 builder.add(ScriptedMetricHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("global")) {
-                throw new RuntimeException("not implemented");
+                builder.add(GlobalHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("filter")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("missing")) {
