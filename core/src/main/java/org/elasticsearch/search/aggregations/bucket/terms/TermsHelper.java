@@ -1,9 +1,16 @@
 package org.elasticsearch.search.aggregations.bucket.terms;
 
 import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.ImmutableList;
+import org.elasticsearch.common.io.stream.StreamInput;
+import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.support.format.ValueFormatter;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -42,18 +49,21 @@ public class TermsHelper {
         final int requiredSize = -1; // This seems to be unnecessary for our use case...
         final int shardSize = -1; // This seems to be unnecessary for our use case...
         final int minDocCount = -1; // This seems to be unnecessary for our use case...
-        checkState(onlyOneTrue(isString, isLong, isDouble));
+        checkState(bucketObjs.isEmpty() || exactlyOneTrue(isString, isLong, isDouble));
         if (isString) {
             return new StringTerms(name, countDesc, requiredSize, shardSize, minDocCount, buckets.build(), false, -1, sum_other_doc_count);
         } else if (isLong) {
             return new LongTerms(name, countDesc, valueFormatter, requiredSize, shardSize, minDocCount, buckets.build(), false, -1, sum_other_doc_count);
-        } else {
-            checkState(isDouble);
+        } else if (isDouble){
             return new DoubleTerms(name, countDesc, valueFormatter, requiredSize, shardSize, minDocCount, buckets.build(), false, -1, sum_other_doc_count);
+        } else {
+            checkState(bucketObjs.isEmpty());
+            // it shouldn't matter
+            return new StringTerms(name, countDesc, requiredSize, shardSize, minDocCount, buckets.build(), false, -1, sum_other_doc_count);
         }
     }
 
-    private static boolean onlyOneTrue(final Boolean... facts) {
+    private static boolean exactlyOneTrue(final Boolean... facts) {
         boolean onlyOne = false;
         for (boolean fact : facts) {
             if (fact && onlyOne) {
@@ -64,4 +74,6 @@ public class TermsHelper {
         }
         return onlyOne;
     }
+
+
 }

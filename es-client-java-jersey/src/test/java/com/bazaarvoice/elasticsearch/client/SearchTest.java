@@ -5,9 +5,13 @@ import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.collect.ImmutableMap;
+import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.filter.Filter;
+import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
@@ -88,6 +92,9 @@ public class SearchTest extends JerseyRestClientTest {
         final String topHitsAggName = "myTopHitsAgg1";
         final String scriptAggName = "myScriptAgg1";
         final String globalAggName = "myGlobalAgg1";
+        final String filterAggName = "myFilterAgg1";
+        final String filtersAggName = "myFiltersAgg1";
+        final String filtersAggName2 = "myFiltersAgg2";
 
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
@@ -113,6 +120,17 @@ public class SearchTest extends JerseyRestClientTest {
                 .mapScript("_agg['touch'] = 1")
         );
         searchRequestBuilder.addAggregation(AggregationBuilders.global(globalAggName).subAggregation(terms(subAggregationName).field("field")));
+        searchRequestBuilder.addAggregation(AggregationBuilders.filter(filterAggName).filter(FilterBuilders.termFilter("field", "value")));
+        searchRequestBuilder.addAggregation(AggregationBuilders.filters(filtersAggName)
+                .filter("yes", FilterBuilders.termFilter("field", "value"))
+                .filter("no", FilterBuilders.termFilter("field", "missing"))
+                .subAggregation(terms(subAggregationName).field("field"))
+        );
+        searchRequestBuilder.addAggregation(AggregationBuilders.filters(filtersAggName2)
+                .filter(FilterBuilders.termFilter("field", "value"))
+                .filter(FilterBuilders.termFilter("field", "missing"))
+                .subAggregation(terms(subAggregationName).field("field"))
+        );
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -259,12 +277,55 @@ public class SearchTest extends JerseyRestClientTest {
             final Global agg = TypedAggregations.wrap(searchResponse.getAggregations()).getGlobal(globalAggName);
             assertEquals(agg.getDocCount(), 1);
             // then test the subaggregation
-            final Terms aubAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName);
-            assertEquals(aubAgg.getBuckets().size(), 1);
-            for (Terms.Bucket subBucket : aubAgg.getBuckets()) {
+            final Terms subAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName);
+            assertEquals(subAgg.getBuckets().size(), 1);
+            for (Terms.Bucket subBucket : subAgg.getBuckets()) {
                 assertEquals(subBucket.getKey(), "value");
                 assertEquals(subBucket.getDocCount(), 1);
             }
+        }
+
+        {
+            final Filter agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilter(filterAggName);
+            assertEquals(agg.getDocCount(), 1);
+            assertEquals(agg.getAggregations().asList().size(), 0);
+        }
+
+        {
+            final Filters agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilters(filtersAggName);
+            {
+                assertEquals(agg.getBucketByKey("yes").getDocCount(), 1);
+                final Aggregations subAggs = agg.getBucketByKey("yes").getAggregations();
+                assertEquals(subAggs.asList().size(), 1);
+                final Terms subAgg = TypedAggregations.wrap(subAggs).getTerms(subAggregationName);
+                assertEquals(subAgg.getBuckets().size(), 1);
+                for (Terms.Bucket subBucket : subAgg.getBuckets()) {
+                    assertEquals(subBucket.getKey(), "value");
+                    assertEquals(subBucket.getDocCount(), 1);
+                }
+            }
+            {
+                assertEquals(agg.getBucketByKey("no").getDocCount(), 0);
+                final Aggregations subAggs = agg.getBucketByKey("no").getAggregations();
+                assertEquals(TypedAggregations.wrap(subAggs).getTerms(subAggregationName).getBuckets().size(), 0);
+            }
+        }
+
+        {
+            final Filters agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilters(filtersAggName2);
+            assertEquals(agg.getBuckets().size(), 2);
+            long totalDocs = 0;
+            int totalAggs = 0;
+            for (Filters.Bucket bucket : agg.getBuckets()){
+                totalDocs += bucket.getDocCount();
+                final Terms.Bucket subAgg = TypedAggregations.wrap(bucket.getAggregations()).getTerms(subAggregationName).getBucketByKey("value");
+                if (subAgg != null) {
+                    assertEquals(subAgg.getDocCount(), 1);
+                    totalAggs++;
+                }
+            }
+            assertEquals(totalAggs, 1);
+            assertEquals(totalDocs, 1);
         }
 
 

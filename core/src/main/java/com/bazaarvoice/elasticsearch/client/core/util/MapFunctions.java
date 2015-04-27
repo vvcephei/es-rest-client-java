@@ -72,7 +72,7 @@ public class MapFunctions {
             //noinspection unchecked
             return (Map<K, V>) o;
         } else {
-            throw new IllegalArgumentException(String.format("%s was expected to be a list but was %s", o, o.getClass()));
+            throw new IllegalArgumentException(String.format("%s was expected to be a map but was %s", o, o.getClass()));
         }
     }
 

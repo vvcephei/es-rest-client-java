@@ -5,6 +5,8 @@ import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterHelper;
+import org.elasticsearch.search.aggregations.bucket.filters.FiltersHelper;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
@@ -86,7 +88,9 @@ public class InternalAggregationsHelper {
             } else if (type.equals("global")) {
                 builder.add(GlobalHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("filter")) {
-                throw new RuntimeException("not implemented");
+                builder.add(FilterHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
+            } else if (type.equals("filters")) {
+                builder.add(FiltersHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("missing")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("nested")) {
