@@ -10,6 +10,7 @@ import org.elasticsearch.search.aggregations.bucket.filters.FiltersHelper;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
 import org.elasticsearch.search.aggregations.bucket.missing.MissingHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedHelper;
+import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedHelper;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgHelper;
@@ -98,7 +99,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("nested")) {
                 builder.add(NestedHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("reverse_nested")) {
-                throw new RuntimeException("not implemented");
+                builder.add(ReverseNestedHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("children")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("significant_terms")) {

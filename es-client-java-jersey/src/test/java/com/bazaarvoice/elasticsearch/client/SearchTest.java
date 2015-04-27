@@ -16,6 +16,7 @@ import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
@@ -42,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.bazaarvoice.elasticsearch.client.core.TypedAggregations.typed;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.reverseNested;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -63,7 +66,7 @@ public class SearchTest extends JerseyRestClientTest {
                     "dfield", ImmutableMap.of("type", "double"),
                     "ifield", ImmutableMap.of("type", "long"),
                     "location", ImmutableMap.of("type", "geo_point"),
-                    "things", ImmutableMap.of("type", "nested", "properties",ImmutableMap.of("field",ImmutableMap.of("type", "string")))
+                    "things", ImmutableMap.of("type", "nested", "properties", ImmutableMap.of("field", ImmutableMap.of("type", "string")))
                 ))
         ).execute().actionGet();
 
@@ -72,7 +75,7 @@ public class SearchTest extends JerseyRestClientTest {
             "dfield", 2.3,
             "ifield", 4,
             "location", "41.12,-71.34",
-            "things", ImmutableList.of(ImmutableMap.of("field","nested"))
+            "things", ImmutableList.of(ImmutableMap.of("field", "nested"))
         ).setRefresh(true).execute().actionGet();
     }
 
@@ -102,6 +105,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String filtersAggName2 = "myFiltersAgg2";
         final String missingAggName = "myMissingAgg";
         final String nestedAggName = "myNestedAgg1";
+        final String nestedAggName2 = "myNestedAgg2";
+        final String reverseNestedAggName = "myReverseNestedAgg1";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -139,6 +144,11 @@ public class SearchTest extends JerseyRestClientTest {
         );
         searchRequestBuilder.addAggregation(AggregationBuilders.missing(missingAggName).field("absent"));
         searchRequestBuilder.addAggregation(AggregationBuilders.nested(nestedAggName).path("things").subAggregation(terms(subAggregationName).field("things.field")));
+        searchRequestBuilder.addAggregation(AggregationBuilders
+            .nested(nestedAggName2).path("things")
+            .subAggregation(
+                terms(subAggregationName).field("things.field").subAggregation(
+                    reverseNested(reverseNestedAggName).subAggregation(terms(subAggregationName).field("field")))));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -162,7 +172,7 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(entry.getCount(), 1);
         }
         {
-            final Terms agg = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(stringAggregationName);
+            final Terms agg = typed(searchResponse.getAggregations()).getTerms(stringAggregationName);
             assertEquals(agg.getBuckets().size(), 1);
             for (Terms.Bucket bucket : agg.getBuckets()) {
                 assertEquals(bucket.getKey(), "value");
@@ -170,7 +180,7 @@ public class SearchTest extends JerseyRestClientTest {
             }
         }
         {
-            final Terms agg = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(doubleAggregationName);
+            final Terms agg = typed(searchResponse.getAggregations()).getTerms(doubleAggregationName);
             assertEquals(agg.getBuckets().size(), 1);
             for (Terms.Bucket bucket : agg.getBuckets()) {
                 assertEquals(bucket.getKeyAsNumber(), (Number) 2.3);
@@ -178,13 +188,13 @@ public class SearchTest extends JerseyRestClientTest {
             }
         }
         {
-            final Terms agg = TypedAggregations.wrap(searchResponse.getAggregations()).getTerms(longAggregationName);
+            final Terms agg = typed(searchResponse.getAggregations()).getTerms(longAggregationName);
             assertEquals(agg.getBuckets().size(), 1);
             for (Terms.Bucket bucket : agg.getBuckets()) {
                 assertEquals(bucket.getKeyAsNumber(), (Number) 4l);
                 assertEquals(bucket.getDocCount(), 1);
                 // then test the subaggregation
-                final Terms aubAgg = TypedAggregations.wrap(bucket.getAggregations()).getTerms(subAggregationName);
+                final Terms aubAgg = typed(bucket.getAggregations()).getTerms(subAggregationName);
                 assertEquals(aubAgg.getBuckets().size(), 1);
                 for (Terms.Bucket subBucket : aubAgg.getBuckets()) {
                     assertEquals(subBucket.getKey(), "value");
@@ -193,27 +203,27 @@ public class SearchTest extends JerseyRestClientTest {
             }
         }
         {
-            final ValueCount agg = TypedAggregations.wrap(searchResponse.getAggregations()).getValueCount(countAggName);
+            final ValueCount agg = typed(searchResponse.getAggregations()).getValueCount(countAggName);
             assertEquals(agg.getValue(), 1);
         }
         {
-            final Avg agg = TypedAggregations.wrap(searchResponse.getAggregations()).getAvg(avgAggName);
+            final Avg agg = typed(searchResponse.getAggregations()).getAvg(avgAggName);
             assertEquals(agg.getValue(), 4.0);
         }
         {
-            final Min agg = TypedAggregations.wrap(searchResponse.getAggregations()).getMin(minAggName);
+            final Min agg = typed(searchResponse.getAggregations()).getMin(minAggName);
             assertEquals(agg.getValue(), 4.0);
         }
         {
-            final Max agg = TypedAggregations.wrap(searchResponse.getAggregations()).getMax(maxAggName);
+            final Max agg = typed(searchResponse.getAggregations()).getMax(maxAggName);
             assertEquals(agg.getValue(), 4.0);
         }
         {
-            final Sum agg = TypedAggregations.wrap(searchResponse.getAggregations()).getSum(sumAggName);
+            final Sum agg = typed(searchResponse.getAggregations()).getSum(sumAggName);
             assertEquals(agg.getValue(), 4.0);
         }
         {
-            final Stats agg = TypedAggregations.wrap(searchResponse.getAggregations()).getStats(statsAggName);
+            final Stats agg = typed(searchResponse.getAggregations()).getStats(statsAggName);
             assertEquals(agg.getCount(), 1l);
             assertEquals(agg.getAvg(), 4.0);
             assertEquals(agg.getMax(), 4.0);
@@ -221,7 +231,7 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.getSum(), 4.0);
         }
         {
-            final ExtendedStats agg = TypedAggregations.wrap(searchResponse.getAggregations()).getExtendedStats(estatsAggName);
+            final ExtendedStats agg = typed(searchResponse.getAggregations()).getExtendedStats(estatsAggName);
             assertEquals(agg.getCount(), 1l);
             assertEquals(agg.getAvg(), 4.0);
             assertEquals(agg.getMax(), 4.0);
@@ -235,12 +245,12 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final Percentiles agg = TypedAggregations.wrap(searchResponse.getAggregations()).getPercentiles(percentilesAggName);
+            final Percentiles agg = typed(searchResponse.getAggregations()).getPercentiles(percentilesAggName);
             assertEquals(agg.percentile(100), 4.0);
         }
 
         {
-            final PercentileRanks agg = TypedAggregations.wrap(searchResponse.getAggregations()).getPercentileRanks(percentileRanksAggName);
+            final PercentileRanks agg = typed(searchResponse.getAggregations()).getPercentileRanks(percentileRanksAggName);
             assertEquals(agg.percent(0.0), 0.0);
             assertEquals(agg.percent(2.0), 50.0);
             assertEquals(agg.percent(4.0), 100.0);
@@ -248,11 +258,11 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.percent(10.0), 100.0);
         }
         {
-            final Cardinality agg = TypedAggregations.wrap(searchResponse.getAggregations()).getCardinality(cardinalityAggName);
+            final Cardinality agg = typed(searchResponse.getAggregations()).getCardinality(cardinalityAggName);
             assertEquals(agg.getValue(), 1);
         }
         {
-            final GeoBounds agg = TypedAggregations.wrap(searchResponse.getAggregations()).getGeoBounds(geoBoundsAggName);
+            final GeoBounds agg = typed(searchResponse.getAggregations()).getGeoBounds(geoBoundsAggName);
 //            "location", ImmutableMap.of("lat", 41.12, "lon", -71.34)
             assertEquals(agg.topLeft().lat(), 41.12);
             assertEquals(agg.topLeft().lon(), -71.34);
@@ -261,7 +271,7 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final TopHits agg = TypedAggregations.wrap(searchResponse.getAggregations()).getTopHits(topHitsAggName);
+            final TopHits agg = typed(searchResponse.getAggregations()).getTopHits(topHitsAggName);
             assertEquals(agg.getHits().getTotalHits(), 1);
             final SearchHit hit = agg.getHits().getAt(0);
             assertEquals(hit.index(), INDEX);
@@ -271,7 +281,7 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final ScriptedMetric agg = TypedAggregations.wrap(searchResponse.getAggregations()).getScriptedMetric(scriptAggName);
+            final ScriptedMetric agg = typed(searchResponse.getAggregations()).getScriptedMetric(scriptAggName);
             int sum = 0;
             for (Map<String, Integer> bucket : (List<Map<String, Integer>>) agg.aggregation()) {
                 if (!bucket.isEmpty()) {
@@ -282,10 +292,10 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final Global agg = TypedAggregations.wrap(searchResponse.getAggregations()).getGlobal(globalAggName);
+            final Global agg = typed(searchResponse.getAggregations()).getGlobal(globalAggName);
             assertEquals(agg.getDocCount(), 1);
             // then test the subaggregation
-            final Terms subAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName);
+            final Terms subAgg = typed(agg.getAggregations()).getTerms(subAggregationName);
             assertEquals(subAgg.getBuckets().size(), 1);
             for (Terms.Bucket subBucket : subAgg.getBuckets()) {
                 assertEquals(subBucket.getKey(), "value");
@@ -294,18 +304,18 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final Filter agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilter(filterAggName);
+            final Filter agg = typed(searchResponse.getAggregations()).getFilter(filterAggName);
             assertEquals(agg.getDocCount(), 1);
             assertEquals(agg.getAggregations().asList().size(), 0);
         }
 
         {
-            final Filters agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilters(filtersAggName);
+            final Filters agg = typed(searchResponse.getAggregations()).getFilters(filtersAggName);
             {
                 assertEquals(agg.getBucketByKey("yes").getDocCount(), 1);
                 final Aggregations subAggs = agg.getBucketByKey("yes").getAggregations();
                 assertEquals(subAggs.asList().size(), 1);
-                final Terms subAgg = TypedAggregations.wrap(subAggs).getTerms(subAggregationName);
+                final Terms subAgg = typed(subAggs).getTerms(subAggregationName);
                 assertEquals(subAgg.getBuckets().size(), 1);
                 for (Terms.Bucket subBucket : subAgg.getBuckets()) {
                     assertEquals(subBucket.getKey(), "value");
@@ -315,18 +325,18 @@ public class SearchTest extends JerseyRestClientTest {
             {
                 assertEquals(agg.getBucketByKey("no").getDocCount(), 0);
                 final Aggregations subAggs = agg.getBucketByKey("no").getAggregations();
-                assertEquals(TypedAggregations.wrap(subAggs).getTerms(subAggregationName).getBuckets().size(), 0);
+                assertEquals(typed(subAggs).getTerms(subAggregationName).getBuckets().size(), 0);
             }
         }
 
         {
-            final Filters agg = TypedAggregations.wrap(searchResponse.getAggregations()).getFilters(filtersAggName2);
+            final Filters agg = typed(searchResponse.getAggregations()).getFilters(filtersAggName2);
             assertEquals(agg.getBuckets().size(), 2);
             long totalDocs = 0;
             int totalAggs = 0;
-            for (Filters.Bucket bucket : agg.getBuckets()){
+            for (Filters.Bucket bucket : agg.getBuckets()) {
                 totalDocs += bucket.getDocCount();
-                final Terms.Bucket subAgg = TypedAggregations.wrap(bucket.getAggregations()).getTerms(subAggregationName).getBucketByKey("value");
+                final Terms.Bucket subAgg = typed(bucket.getAggregations()).getTerms(subAggregationName).getBucketByKey("value");
                 if (subAgg != null) {
                     assertEquals(subAgg.getDocCount(), 1);
                     totalAggs++;
@@ -337,15 +347,32 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final Missing agg = TypedAggregations.wrap(searchResponse.getAggregations()).getMissing(missingAggName);
+            final Missing agg = typed(searchResponse.getAggregations()).getMissing(missingAggName);
             assertEquals(agg.getDocCount(), 1);
         }
 
         {
-            final Nested agg = TypedAggregations.wrap(searchResponse.getAggregations()).getNested(nestedAggName);
+            final Nested agg = typed(searchResponse.getAggregations()).getNested(nestedAggName);
             assertEquals(agg.getDocCount(), 1);
-            final Terms.Bucket subAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName).getBucketByKey("nested");
+            final Terms.Bucket subAgg = typed(agg.getAggregations()).getTerms(subAggregationName).getBucketByKey("nested");
             assertEquals(subAgg.getDocCount(), 1);
+        }
+
+        {
+            final Nested agg = typed(searchResponse.getAggregations()).getNested(nestedAggName2);
+            assertEquals(agg.getDocCount(), 1);
+
+            final TypedAggregations topLevelAggs = typed(agg.getAggregations());
+            final Terms.Bucket subAgg = topLevelAggs.getTerms(subAggregationName).getBucketByKey("nested");
+            assertEquals(subAgg.getDocCount(), 1);
+
+            final TypedAggregations nestedAggs = typed(topLevelAggs.getTerms(subAggregationName).getBucketByKey("nested").getAggregations());
+            final ReverseNested reverseNested = nestedAggs.getReverseNested(reverseNestedAggName);
+            assertEquals(reverseNested.getDocCount(), 1);
+            
+            final TypedAggregations reverseNestedAggs = typed(nestedAggs.getReverseNested(reverseNestedAggName).getAggregations());
+            final Terms.Bucket reverseNestedBucket = reverseNestedAggs.getTerms(subAggregationName).getBucketByKey("value");
+            assertEquals(reverseNestedBucket.getDocCount(), 1);
         }
 
 

@@ -47,7 +47,7 @@ public class TypedAggregations {
         this.aggregations = aggregations;
     }
 
-    public static TypedAggregations wrap(Aggregations aggregations) { return new TypedAggregations(aggregations); }
+    public static TypedAggregations typed(Aggregations aggregations) { return new TypedAggregations(aggregations); }
 
     // Terms
 
