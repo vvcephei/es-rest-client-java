@@ -4,6 +4,7 @@ import com.bazaarvoice.elasticsearch.client.core.TypedAggregations;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -13,6 +14,8 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.bucket.missing.Missing;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
@@ -59,7 +62,8 @@ public class SearchTest extends JerseyRestClientTest {
                     "field", ImmutableMap.of("type", "string"),
                     "dfield", ImmutableMap.of("type", "double"),
                     "ifield", ImmutableMap.of("type", "long"),
-                    "location", ImmutableMap.of("type", "geo_point")
+                    "location", ImmutableMap.of("type", "geo_point"),
+                    "things", ImmutableMap.of("type", "nested", "properties",ImmutableMap.of("field",ImmutableMap.of("type", "string")))
                 ))
         ).execute().actionGet();
 
@@ -67,7 +71,8 @@ public class SearchTest extends JerseyRestClientTest {
             "field", "value",
             "dfield", 2.3,
             "ifield", 4,
-            "location", "41.12,-71.34"
+            "location", "41.12,-71.34",
+            "things", ImmutableList.of(ImmutableMap.of("field","nested"))
         ).setRefresh(true).execute().actionGet();
     }
 
@@ -95,7 +100,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String filterAggName = "myFilterAgg1";
         final String filtersAggName = "myFiltersAgg1";
         final String filtersAggName2 = "myFiltersAgg2";
-
+        final String missingAggName = "myMissingAgg";
+        final String nestedAggName = "myNestedAgg1";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -131,6 +137,8 @@ public class SearchTest extends JerseyRestClientTest {
                 .filter(FilterBuilders.termFilter("field", "missing"))
                 .subAggregation(terms(subAggregationName).field("field"))
         );
+        searchRequestBuilder.addAggregation(AggregationBuilders.missing(missingAggName).field("absent"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.nested(nestedAggName).path("things").subAggregation(terms(subAggregationName).field("things.field")));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -326,6 +334,18 @@ public class SearchTest extends JerseyRestClientTest {
             }
             assertEquals(totalAggs, 1);
             assertEquals(totalDocs, 1);
+        }
+
+        {
+            final Missing agg = TypedAggregations.wrap(searchResponse.getAggregations()).getMissing(missingAggName);
+            assertEquals(agg.getDocCount(), 1);
+        }
+
+        {
+            final Nested agg = TypedAggregations.wrap(searchResponse.getAggregations()).getNested(nestedAggName);
+            assertEquals(agg.getDocCount(), 1);
+            final Terms.Bucket subAgg = TypedAggregations.wrap(agg.getAggregations()).getTerms(subAggregationName).getBucketByKey("nested");
+            assertEquals(subAgg.getDocCount(), 1);
         }
 
 
