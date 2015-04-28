@@ -18,6 +18,7 @@ import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
+import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
@@ -36,6 +37,7 @@ import org.elasticsearch.search.facet.FacetBuilders;
 import org.elasticsearch.search.facet.terms.TermsFacet;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.term.TermSuggestionBuilder;
+import org.junit.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -47,8 +49,11 @@ import java.util.Objects;
 import static com.bazaarvoice.elasticsearch.client.core.TypedAggregations.typed;
 import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.reverseNested;
+import static org.elasticsearch.search.aggregations.AggregationBuilders.significantTerms;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
+import static org.junit.Assert.fail;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -59,6 +64,14 @@ public class SearchTest extends JerseyRestClientTest {
     public static final String TYPE2 = "search-child-type";
     public static final String ID1 = "search-test-id-1";
     public static final String ID2 = "search-test-id-2";
+
+    public static final String SignificantTermsIndex = "search-test-idx-significant-terms";
+    public static final String SignificantTermsType = "search-test-type-significant-terms";
+    public static final String SignificantTermsIdPrefix = "search-test-id-";
+    private final String metroPolice = "Metro Police";
+    private final String transportPolice = "British Transport Police";
+    private final String robbery = "Robbery";
+    private final String bikeTheft = "Bicycle Theft";
 
     @BeforeClass
     public void setupSearchTest() throws IOException {
@@ -94,6 +107,47 @@ public class SearchTest extends JerseyRestClientTest {
             "anotherfield", "anothervalue",
             "(id)", ID2
         ).setParent(ID1).setRefresh(true).execute().actionGet();
+
+
+        nodeClient().admin().indices().prepareCreate(SignificantTermsIndex).addMapping(SignificantTermsType,
+            ImmutableMap.<String, Object>of(
+                "properties", map(
+                    "force", map("type", "string", "index", "not_analyzed"),
+                    "crime_type", map("type", "string", "index", "not_analyzed")
+                )
+            )
+        ).execute().actionGet();
+
+        for (int i = 0; i < 20; i++) {
+            restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + i).setSource(
+                "force", metroPolice,
+                "crime_type", robbery
+            ).execute().actionGet();
+        }
+        for (int i = 20; i < 30; i++) {
+            restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + i).setSource(
+                "force", transportPolice,
+                "crime_type", bikeTheft
+            ).execute().actionGet();
+        }
+        restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + 30).setSource(
+            "force", metroPolice,
+            "crime_type", bikeTheft
+        ).execute().actionGet();
+        restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + 31).setSource(
+            "force", transportPolice,
+            "crime_type", robbery
+        ).execute().actionGet();
+        restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + 32).setSource(
+            "force", "APD",
+            "crime_type", bikeTheft
+        ).execute().actionGet();
+        restClient().prepareIndex(SignificantTermsIndex, SignificantTermsType, SignificantTermsIdPrefix + 33).setSource(
+            "force", "APD",
+            "crime_type", robbery
+        ).execute().actionGet();
+
+        nodeClient().admin().indices().prepareRefresh(SignificantTermsIndex).execute().actionGet();
     }
 
     private <K, V> ImmutableMap<K, V> map(Object... objs) {
@@ -447,6 +501,76 @@ public class SearchTest extends JerseyRestClientTest {
             System.out.println("sortValues#: " + Objects.toString(hit.getSortValues().length));
             assertEquals(hit.getSortValues().length, 0);
             assertEquals(hit.getMatchedQueries().length, 0);
+        }
+    }
+
+    @Test public void testSignificantTerms() {
+        final String termsAggName = "forces";
+        final String significantTermsAggName = "significantCrimeTypes";
+        SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(SignificantTermsIndex);
+        searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+        searchRequestBuilder.addAggregation(
+            terms(termsAggName).field("force").subAggregation(
+                significantTerms(significantTermsAggName).field("crime_type")));
+        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+
+        {
+            final Terms agg = typed(searchResponse.getAggregations()).getTerms(termsAggName);
+            assertEquals(agg.getBuckets().size(), 3);
+
+            {
+                final Terms.Bucket bucket = agg.getBucketByKey(metroPolice);
+                assertEquals(bucket.getDocCount(), 21);
+                final SignificantTerms significantTerms = typed(bucket.getAggregations()).getSignificantTerms(significantTermsAggName);
+                final SignificantTerms.Bucket sigTermsBucket = significantTerms.getBucketByKey(robbery);
+                assertNotNull(sigTermsBucket);
+                assertEquals(sigTermsBucket.getDocCount(), 20);
+                assertEquals(sigTermsBucket.getSubsetDf(), 20);
+                assertEquals(sigTermsBucket.getSubsetSize(), 21);
+                assertEquals(sigTermsBucket.getSupersetDf(), 22);
+                try {
+                    sigTermsBucket.getSupersetSize(); // would be 33
+                    fail();
+                } catch (UnsupportedOperationException e) {
+                    assertEquals(e.getMessage(), "unserialized information");
+                }
+                Assert.assertTrue(Double.toString(sigTermsBucket.getSignificanceScore()),
+                    !Double.isInfinite(sigTermsBucket.getSignificanceScore()) &&
+                        !Double.isNaN(sigTermsBucket.getSignificanceScore()) &&
+                        sigTermsBucket.getSignificanceScore() > 0
+
+                );
+            }
+
+            {
+                final Terms.Bucket bucket = agg.getBucketByKey(transportPolice);
+                assertEquals(bucket.getDocCount(), 11);
+                final SignificantTerms significantTerms = typed(bucket.getAggregations()).getSignificantTerms(significantTermsAggName);
+                final SignificantTerms.Bucket sigTermsBucket = significantTerms.getBucketByKey(bikeTheft);
+                assertNotNull(sigTermsBucket);
+                assertEquals(sigTermsBucket.getDocCount(), 10);
+                assertEquals(sigTermsBucket.getSubsetDf(), 10);
+                assertEquals(sigTermsBucket.getSubsetSize(), 11);
+                assertEquals(sigTermsBucket.getSupersetDf(), 12);
+                try {
+                    sigTermsBucket.getSupersetSize(); // would be 33
+                    fail();
+                } catch (UnsupportedOperationException e) {
+                    assertEquals(e.getMessage(), "unserialized information");
+                }
+                Assert.assertTrue(Double.toString(sigTermsBucket.getSignificanceScore()),
+                    !Double.isInfinite(sigTermsBucket.getSignificanceScore()) &&
+                        !Double.isNaN(sigTermsBucket.getSignificanceScore()) &&
+                        sigTermsBucket.getSignificanceScore() > 0
+                );
+            }
+
+            {
+                final Terms.Bucket bucket = agg.getBucketByKey("APD");
+                assertEquals(bucket.getDocCount(), 2);
+                final SignificantTerms significantTerms = typed(bucket.getAggregations()).getSignificantTerms(significantTermsAggName);
+                assertEquals(significantTerms.getBuckets().size(), 0); // no significant terms for these folks
+            }
         }
     }
 }
