@@ -5,6 +5,7 @@ import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.children.ChildrenHelper;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterHelper;
 import org.elasticsearch.search.aggregations.bucket.filters.FiltersHelper;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
@@ -101,7 +102,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("reverse_nested")) {
                 builder.add(ReverseNestedHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("children")) {
-                throw new RuntimeException("not implemented");
+                builder.add(ChildrenHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("significant_terms")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("range")) {

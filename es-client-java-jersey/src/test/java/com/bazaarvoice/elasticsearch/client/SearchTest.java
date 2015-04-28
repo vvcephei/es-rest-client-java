@@ -11,6 +11,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.children.Children;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.bazaarvoice.elasticsearch.client.core.TypedAggregations.typed;
+import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.reverseNested;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
 import static org.testng.Assert.assertEquals;
@@ -54,6 +56,7 @@ public class SearchTest extends JerseyRestClientTest {
 
     public static final String INDEX = "search-test-idx";
     public static final String TYPE = "search-test-type";
+    public static final String TYPE2 = "search-child-type";
     public static final String ID1 = "search-test-id-1";
     public static final String ID2 = "search-test-id-2";
 
@@ -61,12 +64,20 @@ public class SearchTest extends JerseyRestClientTest {
     public void setupSearchTest() throws IOException {
         nodeClient().admin().indices().prepareCreate(INDEX).addMapping(TYPE,
             ImmutableMap.<String, Object>of(
-                "properties", ImmutableMap.of(
-                    "field", ImmutableMap.of("type", "string"),
-                    "dfield", ImmutableMap.of("type", "double"),
-                    "ifield", ImmutableMap.of("type", "long"),
-                    "location", ImmutableMap.of("type", "geo_point"),
-                    "things", ImmutableMap.of("type", "nested", "properties", ImmutableMap.of("field", ImmutableMap.of("type", "string")))
+                "properties", map(
+                    "field", map("type", "string"),
+                    "(id)", map("type", "string", "index", "not_analyzed"),
+                    "dfield", map("type", "double"),
+                    "ifield", map("type", "long"),
+                    "location", map("type", "geo_point"),
+                    "things", map("type", "nested", "properties", map("field", map("type", "string")))
+                ))
+        ).addMapping(TYPE2,
+            ImmutableMap.<String, Object>of(
+                "_parent", ImmutableMap.of("type", TYPE),
+                "properties", map(
+                    "anotherfield", map("type", "string"),
+                    "(id)", map("type", "string", "index", "not_analyzed")
                 ))
         ).execute().actionGet();
 
@@ -75,8 +86,24 @@ public class SearchTest extends JerseyRestClientTest {
             "dfield", 2.3,
             "ifield", 4,
             "location", "41.12,-71.34",
+            "(id)", ID1,
             "things", ImmutableList.of(ImmutableMap.of("field", "nested"))
         ).setRefresh(true).execute().actionGet();
+
+        restClient().prepareIndex(INDEX, TYPE2, ID2).setSource(
+            "anotherfield", "anothervalue",
+            "(id)", ID2
+        ).setParent(ID1).setRefresh(true).execute().actionGet();
+    }
+
+    private <K, V> ImmutableMap<K, V> map(Object... objs) {
+        final ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+        checkState((objs.length % 2) == 0);
+        for (int i = 0; i < objs.length; i += 2) {
+            //noinspection unchecked
+            builder.put((K) objs[i], (V) objs[i + 1]);
+        }
+        return builder.build();
     }
 
     @Test public void testSearch() {
@@ -107,6 +134,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String nestedAggName = "myNestedAgg1";
         final String nestedAggName2 = "myNestedAgg2";
         final String reverseNestedAggName = "myReverseNestedAgg1";
+        final String childrenAggName = "myChildrenAgg1";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -149,6 +177,7 @@ public class SearchTest extends JerseyRestClientTest {
             .subAggregation(
                 terms(subAggregationName).field("things.field").subAggregation(
                     reverseNested(reverseNestedAggName).subAggregation(terms(subAggregationName).field("field")))));
+        searchRequestBuilder.addAggregation(AggregationBuilders.children(childrenAggName).childType(TYPE2).subAggregation(terms(subAggregationName).field("(id)")));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -293,7 +322,7 @@ public class SearchTest extends JerseyRestClientTest {
 
         {
             final Global agg = typed(searchResponse.getAggregations()).getGlobal(globalAggName);
-            assertEquals(agg.getDocCount(), 1);
+            assertEquals(agg.getDocCount(), 2);
             // then test the subaggregation
             final Terms subAgg = typed(agg.getAggregations()).getTerms(subAggregationName);
             assertEquals(subAgg.getBuckets().size(), 1);
@@ -369,10 +398,18 @@ public class SearchTest extends JerseyRestClientTest {
             final TypedAggregations nestedAggs = typed(topLevelAggs.getTerms(subAggregationName).getBucketByKey("nested").getAggregations());
             final ReverseNested reverseNested = nestedAggs.getReverseNested(reverseNestedAggName);
             assertEquals(reverseNested.getDocCount(), 1);
-            
+
             final TypedAggregations reverseNestedAggs = typed(nestedAggs.getReverseNested(reverseNestedAggName).getAggregations());
             final Terms.Bucket reverseNestedBucket = reverseNestedAggs.getTerms(subAggregationName).getBucketByKey("value");
             assertEquals(reverseNestedBucket.getDocCount(), 1);
+        }
+
+        {
+            final Children agg = typed(searchResponse.getAggregations()).getChildren(childrenAggName);
+            assertEquals(agg.getDocCount(), 1);
+            assertEquals(typed(agg.getAggregations()).getTerms(subAggregationName).getBuckets().size(), 1);
+            final Terms.Bucket bucket = typed(agg.getAggregations()).getTerms(subAggregationName).getBucketByKey(ID2);
+            assertEquals(bucket.getDocCount(), 1);
         }
 
 
@@ -386,7 +423,7 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(entry.getOptions().size(), 1);
             for (Suggest.Suggestion.Entry.Option option : entry.getOptions()) {
                 assertEquals(option.getText().string(), "value");
-                // FIXME WTF? assertEquals(option.getHighlighted().string(), "null");
+                assertNull(option.getHighlighted().string());
                 assertTrue(option.getScore() > 0.0);
             }
         }
