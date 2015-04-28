@@ -16,6 +16,26 @@ import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMa
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 
 public class SignificantTermsHelper {
+    /*
+        This gets a bit confusing, so I'll document how everything maps to everything else.
+        So the math goes like this:
+        A term is significant if this number:
+        termFrequencyForGroup/allTermsFrequencyForGroup
+        is somehow bigger than this number:
+        termFrequencyOverall/allTermsFrequencyOverall
+
+        Here's how those map to ES api as well as SignificantTerms fields:
+        termFrequencyForGroup = bucket.doc_count = subsetDf
+        allTermsFrequencyForGroup = aggregation.doc_count = subsetSize
+        termFrequencyOverall = bucket.bg_count = supersetDf
+        allTermsFrequencyOverall = (unserialized in API) = supersetSize
+
+        I'd like to send a PR in the future to serialize the supersetSize.
+        By default this number is actually just the number of documents in the
+        index, but you can narrow the scope using "background_filter", in which
+        case the supersetSize is the number of docs matching the filter.
+        */
+
     public static InternalAggregation fromXContent(final String name, final Map<String, Object> map, final AggregationsManifest manifest) {
         final long docCount = nodeLongValue(map.get("doc_count"));
         final List<Object> bucketObjs = nodeListValue(map.get("buckets"), Object.class);

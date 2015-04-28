@@ -505,6 +505,34 @@ public class SearchTest extends JerseyRestClientTest {
     }
 
     @Test public void testSignificantTerms() {
+        /*
+        This gets a bit confusing, so I'll document how everything maps to everything else.
+        So the math goes like this:
+        A term is significant if this number:
+        termFrequencyForGroup/allTermsFrequencyForGroup
+        is somehow bigger than this number:
+        termFrequencyOverall/allTermsFrequencyOverall
+
+        Here's how those map to ES api as well as SignificantTerms fields:
+        termFrequencyForGroup = bucket.doc_count = subsetDf
+        allTermsFrequencyForGroup = aggregation.doc_count = subsetSize
+        termFrequencyOverall = bucket.bg_count = supersetDf
+        allTermsFrequencyOverall = (unserialized in API) = supersetSize
+
+        I'd like to send a PR in the future to serialize the supersetSize.
+        By default this number is actually just the number of documents in the
+        index, but you can narrow the scope using "background_filter", in which
+        case the supersetSize is the number of docs matching the filter.
+
+        I'll explain the Metro Police example:
+        termFrequencyForGroup is 20 because Metro saw 20 robberies.
+        allTermsForGroup is 21 because Metro saw 21 crimes overall.
+        termFrequencyOverall is 22, because there were 22 robberies over Metro,Transport, and APD.
+        allTermsFrequencyOverall is 33 because there are a total of 33 documents in the index
+        (they all happen to be crimes).
+         */
+
+
         final String termsAggName = "forces";
         final String significantTermsAggName = "significantCrimeTypes";
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(SignificantTermsIndex);
