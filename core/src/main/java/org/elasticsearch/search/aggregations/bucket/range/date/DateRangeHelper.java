@@ -1,8 +1,10 @@
-package org.elasticsearch.search.aggregations.bucket.range;
+package org.elasticsearch.search.aggregations.bucket.range.date;
 
 import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.search.aggregations.InternalAggregation;
+import org.elasticsearch.search.aggregations.bucket.range.InternalRange;
+import org.elasticsearch.search.aggregations.bucket.range.RangeBucketHelper;
 import org.elasticsearch.search.aggregations.support.format.ValueFormatter;
 
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.Map;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 
-public class RangeHelper {
+public class DateRangeHelper {
     public static InternalAggregation fromXContent(final String name, final Map<String, Object> map, final AggregationsManifest manifest) {
         final Object bucketsObj = map.get("buckets");
         if (bucketsObj instanceof Map) {
@@ -23,27 +25,27 @@ public class RangeHelper {
         }
     }
 
-    private static InternalRange<InternalRange.Bucket> internalAnonRange(final String name, final List<Object> list, final AggregationsManifest manifest) {
-        final ImmutableList.Builder<InternalRange.Bucket> buckets = ImmutableList.builder();
+    private static InternalDateRange internalKeyedRange(final String name, final Map<String, Object> map, final AggregationsManifest manifest) {
+        final ImmutableList.Builder<InternalDateRange.Bucket> buckets = ImmutableList.builder();
+        for (Map.Entry<String, Object> bucketObj : map.entrySet()) {
+            final String bucketName = bucketObj.getKey();
+            final Map<String, Object> bucketMap = nodeMapValue(bucketObj.getValue(), String.class, Object.class);
+            buckets.add(DateRangeBucketHelper.fromXContent(bucketName, bucketMap, manifest));
+        }
+
+        return new InternalDateRange(name, buckets.build(), ValueFormatter.RAW, true);
+    }
+
+    private static InternalDateRange internalAnonRange(final String name, final List<Object> list, final AggregationsManifest manifest) {
+        final ImmutableList.Builder<InternalDateRange.Bucket> buckets = ImmutableList.builder();
         for (Object bucketObj : list) {
             final Map<String, Object> bucketMap = nodeMapValue(bucketObj, String.class, Object.class);
-            buckets.add(RangeBucketHelper.fromXContent(null, bucketMap, manifest));
+            buckets.add(DateRangeBucketHelper.fromXContent(null, bucketMap, manifest));
         }
         // In the current implementation, the bucket will always have a key (because it generates one if it's missing).
         // Also, possibly because the Java api cannot ask for a "keyed" range agg, ES is always giving back
         // a list, even when we specify keys.
         // I'm thinking there's no downside to always saying the range is keyed, since you can still just do getBuckets if you don't know the keys.
-        return new InternalRange<InternalRange.Bucket>(name, buckets.build(), ValueFormatter.RAW, true);
-    }
-
-    private static InternalRange<InternalRange.Bucket> internalKeyedRange(final String name, final Map<String, Object> map, final AggregationsManifest manifest) {
-        final ImmutableList.Builder<InternalRange.Bucket> buckets = ImmutableList.builder();
-        for (Map.Entry<String, Object> bucketObj : map.entrySet()) {
-            final String bucketName = bucketObj.getKey();
-            final Map<String, Object> bucketMap = nodeMapValue(bucketObj.getValue(), String.class, Object.class);
-            buckets.add(RangeBucketHelper.fromXContent(bucketName, bucketMap, manifest));
-        }
-
-        return new InternalRange<InternalRange.Bucket>(name, buckets.build(), ValueFormatter.RAW, true);
+        return new InternalDateRange(name, buckets.build(), ValueFormatter.RAW, true);
     }
 }

@@ -13,6 +13,7 @@ import org.elasticsearch.search.aggregations.bucket.missing.MissingHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedHelper;
 import org.elasticsearch.search.aggregations.bucket.range.RangeHelper;
+import org.elasticsearch.search.aggregations.bucket.range.date.DateRangeHelper;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsHelper;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
@@ -29,6 +30,7 @@ import org.elasticsearch.search.aggregations.metrics.sum.SumHelper;
 import org.elasticsearch.search.aggregations.metrics.tophits.TopHitsHelper;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountHelper;
 
+import java.util.Date;
 import java.util.Map;
 
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
@@ -110,7 +112,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("range")) {
                 builder.add(RangeHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("date_range")) {
-                throw new RuntimeException("not implemented");
+                builder.add(DateRangeHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("ip_range")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("histogram")) {

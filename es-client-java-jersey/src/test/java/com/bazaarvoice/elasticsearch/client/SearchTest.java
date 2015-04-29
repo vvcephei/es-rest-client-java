@@ -6,6 +6,8 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.collect.ImmutableMap;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -19,6 +21,7 @@ import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
+import org.elasticsearch.search.aggregations.bucket.range.date.DateRange;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
@@ -84,7 +87,8 @@ public class SearchTest extends JerseyRestClientTest {
                     "dfield", map("type", "double"),
                     "ifield", map("type", "long"),
                     "location", map("type", "geo_point"),
-                    "things", map("type", "nested", "properties", map("field", map("type", "string")))
+                    "things", map("type", "nested", "properties", map("field", map("type", "string"))),
+                    "time", map("type", "date")
                 ))
         ).addMapping(TYPE2,
             ImmutableMap.<String, Object>of(
@@ -101,7 +105,8 @@ public class SearchTest extends JerseyRestClientTest {
             "ifield", 4,
             "location", "41.12,-71.34",
             "(id)", ID1,
-            "things", ImmutableList.of(ImmutableMap.of("field", "nested"))
+            "things", ImmutableList.of(ImmutableMap.of("field", "nested")),
+            "time", new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC) //2015-01-03T04:05:06.007Z
         ).setRefresh(true).execute().actionGet();
 
         restClient().prepareIndex(INDEX, TYPE2, ID2).setSource(
@@ -192,6 +197,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String childrenAggName = "myChildrenAgg1";
         final String rangeAggName = "myRangeAgg1";
         final String rangeAggNameKeyed = "myRangeAgg2";
+        final String dateRangeAggName = "myDateRangeAgg";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -238,7 +244,16 @@ public class SearchTest extends JerseyRestClientTest {
         searchRequestBuilder.addAggregation(AggregationBuilders.range(rangeAggName).field("dfield").addUnboundedTo(2).addRange(2, 3).addUnboundedFrom(3));
         // FIXME upstream? There's no support in Java for setting the "keyed" param on the request.
         // FIXME upstream? Also, it's not clear what should happen if some ranges specify a key and others do not. I assume the server will barf on you.
-        searchRequestBuilder.addAggregation(AggregationBuilders.range(rangeAggNameKeyed).field("dfield").addUnboundedTo("small", 2).addRange("medium", 2, 3).addUnboundedFrom("large", 3));
+        searchRequestBuilder.addAggregation(AggregationBuilders.range(rangeAggNameKeyed)
+            .field("dfield")
+            .addUnboundedTo("small", 2)
+            .addRange("medium", 2, 3)
+            .addUnboundedFrom("large", 3));
+        searchRequestBuilder.addAggregation(AggregationBuilders.dateRange(dateRangeAggName)
+            .field("time")
+            .addUnboundedTo(new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC))
+            .addRange(new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC), new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC))
+            .addUnboundedFrom(new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC)));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -500,6 +515,19 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.getBucketByKey("large").getFrom().doubleValue(), 3.0);
             assertEquals(agg.getBucketByKey("large").getTo().doubleValue(), Double.POSITIVE_INFINITY);
             assertEquals(agg.getBucketByKey("large").getDocCount(), 0);
+        }
+
+        {
+            final DateRange agg = typed(searchResponse.getAggregations()).getDateRange(dateRangeAggName);
+            assertEquals(agg.getBuckets().size(), 3);
+            for (DateRange.Bucket bucket : agg.getBuckets()) {
+                if (bucket.getDocCount() == 1) {
+                    assertEquals(bucket.getFromAsDate(), new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC));
+                    assertEquals(bucket.getToAsDate(), new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC));
+                } else {
+                    assertEquals(bucket.getDocCount(), 0);
+                }
+            }
         }
 
 
