@@ -18,6 +18,7 @@ import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
+import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
@@ -189,6 +190,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String nestedAggName2 = "myNestedAgg2";
         final String reverseNestedAggName = "myReverseNestedAgg1";
         final String childrenAggName = "myChildrenAgg1";
+        final String rangeAggName = "myRangeAgg1";
+        final String rangeAggNameKeyed = "myRangeAgg2";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -232,6 +235,10 @@ public class SearchTest extends JerseyRestClientTest {
                 terms(subAggregationName).field("things.field").subAggregation(
                     reverseNested(reverseNestedAggName).subAggregation(terms(subAggregationName).field("field")))));
         searchRequestBuilder.addAggregation(AggregationBuilders.children(childrenAggName).childType(TYPE2).subAggregation(terms(subAggregationName).field("(id)")));
+        searchRequestBuilder.addAggregation(AggregationBuilders.range(rangeAggName).field("dfield").addUnboundedTo(2).addRange(2, 3).addUnboundedFrom(3));
+        // FIXME upstream? There's no support in Java for setting the "keyed" param on the request.
+        // FIXME upstream? Also, it's not clear what should happen if some ranges specify a key and others do not. I assume the server will barf on you.
+        searchRequestBuilder.addAggregation(AggregationBuilders.range(rangeAggNameKeyed).field("dfield").addUnboundedTo("small", 2).addRange("medium", 2, 3).addUnboundedFrom("large", 3));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -464,6 +471,35 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(typed(agg.getAggregations()).getTerms(subAggregationName).getBuckets().size(), 1);
             final Terms.Bucket bucket = typed(agg.getAggregations()).getTerms(subAggregationName).getBucketByKey(ID2);
             assertEquals(bucket.getDocCount(), 1);
+        }
+
+        {
+            final Range agg = typed(searchResponse.getAggregations()).getRange(rangeAggName);
+            assertEquals(agg.getBuckets().size(), 3);
+            for (Range.Bucket bucket : agg.getBuckets()) {
+                if (bucket.getDocCount() == 1) {
+                    assertEquals(bucket.getFrom().doubleValue(), 2.0);
+                    assertEquals(bucket.getTo().doubleValue(), 3.0);
+                } else {
+                    assertEquals(bucket.getDocCount(), 0);
+                }
+            }
+        }
+
+        {
+            final Range agg = typed(searchResponse.getAggregations()).getRange(rangeAggNameKeyed);
+            assertEquals(agg.getBuckets().size(), 3);
+            assertEquals(agg.getBucketByKey("small").getFrom().doubleValue(), Double.NEGATIVE_INFINITY);
+            assertEquals(agg.getBucketByKey("small").getTo().doubleValue(), 2.0);
+            assertEquals(agg.getBucketByKey("small").getDocCount(), 0);
+
+            assertEquals(agg.getBucketByKey("medium").getFrom().doubleValue(), 2.0);
+            assertEquals(agg.getBucketByKey("medium").getTo().doubleValue(), 3.0);
+            assertEquals(agg.getBucketByKey("medium").getDocCount(), 1);
+
+            assertEquals(agg.getBucketByKey("large").getFrom().doubleValue(), 3.0);
+            assertEquals(agg.getBucketByKey("large").getTo().doubleValue(), Double.POSITIVE_INFINITY);
+            assertEquals(agg.getBucketByKey("large").getDocCount(), 0);
         }
 
 

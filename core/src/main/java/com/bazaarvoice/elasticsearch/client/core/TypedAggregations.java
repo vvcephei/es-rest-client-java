@@ -11,6 +11,7 @@ import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
+import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRange;
 import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistance;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
@@ -124,6 +125,10 @@ public class TypedAggregations {
     }
 
     // Range
+
+    public Range getRange(final String name) {
+        return aggregations.get(name);
+    }
 
     public DateRange getDateRange(final String name) {
         return aggregations.get(name);
