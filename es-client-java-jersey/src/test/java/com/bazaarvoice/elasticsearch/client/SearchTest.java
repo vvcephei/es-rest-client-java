@@ -22,6 +22,7 @@ import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRange;
+import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.avg.Avg;
@@ -88,7 +89,8 @@ public class SearchTest extends JerseyRestClientTest {
                     "ifield", map("type", "long"),
                     "location", map("type", "geo_point"),
                     "things", map("type", "nested", "properties", map("field", map("type", "string"))),
-                    "time", map("type", "date")
+                    "time", map("type", "date"),
+                    "addr", map("type", "ip")
                 ))
         ).addMapping(TYPE2,
             ImmutableMap.<String, Object>of(
@@ -106,7 +108,8 @@ public class SearchTest extends JerseyRestClientTest {
             "location", "41.12,-71.34",
             "(id)", ID1,
             "things", ImmutableList.of(ImmutableMap.of("field", "nested")),
-            "time", new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC) //2015-01-03T04:05:06.007Z
+            "time", new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC), //2015-01-03T04:05:06.007Z
+            "addr", "10.0.0.134"
         ).setRefresh(true).execute().actionGet();
 
         restClient().prepareIndex(INDEX, TYPE2, ID2).setSource(
@@ -198,6 +201,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String rangeAggName = "myRangeAgg1";
         final String rangeAggNameKeyed = "myRangeAgg2";
         final String dateRangeAggName = "myDateRangeAgg";
+        final String iPV4RangeAggName = "myIPv4RangeAgg";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -254,6 +258,12 @@ public class SearchTest extends JerseyRestClientTest {
             .addUnboundedTo(new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC))
             .addRange(new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC), new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC))
             .addUnboundedFrom(new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC)));
+        searchRequestBuilder.addAggregation(AggregationBuilders.ipRange(iPV4RangeAggName)
+            .field("addr")
+            .addUnboundedTo("10.0.0.100")
+            .addRange("10.0.0.100", "10.0.0.200")
+            .addUnboundedFrom("10.0.0.200"));
+
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -524,6 +534,19 @@ public class SearchTest extends JerseyRestClientTest {
                 if (bucket.getDocCount() == 1) {
                     assertEquals(bucket.getFromAsDate(), new DateTime(2015, 1, 3, 4, 5, 6, 6, DateTimeZone.UTC));
                     assertEquals(bucket.getToAsDate(), new DateTime(2015, 1, 3, 4, 5, 6, 8, DateTimeZone.UTC));
+                } else {
+                    assertEquals(bucket.getDocCount(), 0);
+                }
+            }
+        }
+
+        {
+            final IPv4Range agg = typed(searchResponse.getAggregations()).getIPv4Range(iPV4RangeAggName);
+            assertEquals(agg.getBuckets().size(), 3);
+            for (IPv4Range.Bucket bucket : agg.getBuckets()) {
+                if (bucket.getDocCount() == 1) {
+                    assertEquals(bucket.getFromAsString(), "10.0.0.100");
+                    assertEquals(bucket.getToAsString(), "10.0.0.200");
                 } else {
                     assertEquals(bucket.getDocCount(), 0);
                 }

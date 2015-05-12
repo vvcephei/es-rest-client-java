@@ -14,6 +14,8 @@ import org.elasticsearch.search.aggregations.bucket.nested.NestedHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedHelper;
 import org.elasticsearch.search.aggregations.bucket.range.RangeHelper;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRangeHelper;
+import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4RangeBucketHelper;
+import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4RangeHelper;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsHelper;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsHelper;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityHelper;
@@ -114,7 +116,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("date_range")) {
                 builder.add(DateRangeHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("ip_range")) {
-                throw new RuntimeException("not implemented");
+                builder.add(IPv4RangeHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("histogram")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("date_histogram")) {
