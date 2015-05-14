@@ -8,6 +8,7 @@ import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.children.ChildrenHelper;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterHelper;
 import org.elasticsearch.search.aggregations.bucket.filters.FiltersHelper;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGridHelper;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramHelper;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramHelper;
@@ -127,7 +128,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("geo_distance")) {
                 builder.add(GeoDistanceHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geohash_grid")) {
-                throw new RuntimeException("not implemented");
+                builder.add(GeoHashGridHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else {
                 throw new IllegalStateException("Unrecognized type: " + type);
             }

@@ -6,6 +6,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.collect.ImmutableMap;
+import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -16,6 +17,7 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.children.Children;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filters.Filters;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -209,6 +211,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String dateHistogramAggName = "myDateHistogramAgg";
         final String dateHistogramAggName2 = "myDateHistogramAgg2";
         final String geoDistanceAggName = "myGeoDistanceAgg";
+        final String geoHashGridAggName = "myGeoHashGridAgg";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -278,11 +281,12 @@ public class SearchTest extends JerseyRestClientTest {
             .point("40,-70")
             .addUnboundedTo(100000)
             .addRange(100000,200000)
-            .addRange(200000,300000)
-            .addRange(300000,400000)
-            .addRange(400000,500000)
+            .addRange(200000, 300000)
+            .addRange(300000, 400000)
+            .addRange(400000, 500000)
             .addUnboundedFrom(500000)
         );
+        searchRequestBuilder.addAggregation(AggregationBuilders.geohashGrid(geoHashGridAggName).field("location"));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -599,6 +603,17 @@ public class SearchTest extends JerseyRestClientTest {
             final GeoDistance agg = typed(searchResponse.getAggregations()).getGeoDistance(geoDistanceAggName);
             assertEquals(agg.getBuckets().size(),6);
             assertEquals(agg.getBucketByKey("100000.0-200000.0").getDocCount(), 1);
+        }
+
+        {
+            final GeoHashGrid agg = typed(searchResponse.getAggregations()).getGeoHashGrid(geoHashGridAggName);
+            assertEquals(agg.getBuckets().size(), 1);
+            final GeoHashGrid.Bucket bucket = agg.getBuckets().iterator().next();
+            assertEquals(bucket.getDocCount(), 1);
+            assertEquals(bucket.getKey(), "drm3b");
+            assertEquals(bucket.getKeyAsNumber().longValue(), 213698213l);
+            assertEquals(bucket.getKeyAsGeoPoint(), new GeoPoint("41.11083984375, -71.34521484375"));
+
         }
 
 
