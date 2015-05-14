@@ -29,6 +29,7 @@
 
     <modules>
         <module>parent</module>
+        <module>aggregations-support</module>
         <module>core</module>
         <module>es-client-java-jersey</module>
         <module>es-client-java-examples</module>

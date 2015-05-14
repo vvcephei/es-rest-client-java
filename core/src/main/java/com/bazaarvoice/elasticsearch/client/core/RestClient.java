@@ -1,6 +1,6 @@
 package com.bazaarvoice.elasticsearch.client.core;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestExecutor;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.XContentResponseTransform;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -44,7 +44,6 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchResponseHelper;
 import org.elasticsearch.action.search.SearchRest;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.suggest.SuggestRequest;
@@ -67,25 +66,25 @@ import static org.elasticsearch.action.NotifyingCallback.callback;
  * <p/>
  * This client does NOT have an opinion about how requests will be
  * sent over the wire. It delegates that responsibility to whatever
- * implementation of {@link com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor}
+ * implementation of {@link RestExecutor}
  * you choose to supply.
  */
-public class HttpClient extends AbstractClient implements Client {
+public class RestClient extends AbstractClient implements Client {
 
     private final IndexRest<IndexResponse> indexRest;
     private final GetRest<GetResponse> getRest;
     private final DeleteRest<DeleteResponse> deleteRest;
-    private final SearchRest<SearchResponse> searchRest;
+    private final SearchRest searchRest;
 
-    public static HttpClient withExecutor(final String protocol, final String host, final int port, final HttpExecutor executor) {
-        return new HttpClient(protocol, host, port, executor);
+    public static RestClient withExecutor(final String protocol, final String host, final int port, final RestExecutor executor) {
+        return new RestClient(protocol, host, port, executor);
     }
 
-    private HttpClient(final String protocol, final String host, final int port, final HttpExecutor executor) {
+    private RestClient(final String protocol, final String host, final int port, final RestExecutor executor) {
         indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new XContentResponseTransform<IndexResponse>(new IndexResponseHelper()));
         getRest = new GetRest<GetResponse>(protocol, host, port, executor, new XContentResponseTransform<GetResponse>(new GetResponseHelper()));
         deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new XContentResponseTransform<DeleteResponse>(new DeleteResponseHelper()));
-        searchRest = new SearchRest<SearchResponse>(protocol, host, port, executor, new XContentResponseTransform<SearchResponse>(new SearchResponseHelper()));
+        searchRest = new SearchRest(protocol, host, port, executor);
     }
 
     @Override public void close() {

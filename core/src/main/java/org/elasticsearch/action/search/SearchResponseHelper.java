@@ -1,5 +1,6 @@
 package org.elasticsearch.action.search;
 
+import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.action.FromXContent;
 import org.elasticsearch.action.search.helpers.InternalSearchResponseHelper;
 import org.elasticsearch.common.Preconditions;
@@ -10,8 +11,10 @@ import org.elasticsearch.search.SearchShardTarget;
 
 import java.util.Map;
 
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.toMap;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
+import static org.elasticsearch.common.base.Preconditions.checkState;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeStringValue;
@@ -20,6 +23,21 @@ import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeSt
  * The inverse of {@link org.elasticsearch.action.search.SearchResponse#toXContent(XContentBuilder, Params)}
  */
 public class SearchResponseHelper implements FromXContent<SearchResponse> {
+    final AggregationsManifest aggregationsManifest;
+
+    public SearchResponseHelper(final SearchRequest request) {
+        final Map<String, Object> source = toMap(request.source());
+        if (source == null) {
+            aggregationsManifest = null;
+        } else if (source.containsKey("aggregations")) {
+            aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggregations"), String.class, Object.class));
+        } else if (source.containsKey("aggs")) {
+            aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggs"), String.class, Object.class));
+        } else {
+            aggregationsManifest = null;
+        }
+    }
+
     @Override public SearchResponse fromXContent(final Map<String, Object> map) {
         Map<String, Object> shards = nodeMapValue(map.get("_shards"), String.class, Object.class);
         int totalShards = nodeIntegerValue(shards.get("total"));
@@ -27,7 +45,7 @@ public class SearchResponseHelper implements FromXContent<SearchResponse> {
         int failedShards = totalShards - successfulShards;
 
         return new SearchResponse(
-            InternalSearchResponseHelper.fromXContent(map),
+            InternalSearchResponseHelper.fromXContent(map, aggregationsManifest),
             nodeStringValue(map.get("_scroll_id"), null),
             totalShards,
             successfulShards,

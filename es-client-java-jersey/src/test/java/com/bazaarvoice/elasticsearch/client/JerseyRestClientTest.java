@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class JerseyHttpClientTest {
+public class JerseyRestClientTest {
     // just in case tests need to instantiate their own clients. The main way to get one is to use the restClient() method.
     protected static final String protocol = "http";
     protected static final String host = "localhost";
@@ -20,10 +20,6 @@ public class JerseyHttpClientTest {
     private static final String esDataDirectory = "/tmp/es-client-java-test-" + UUID.randomUUID();
     private static Node node;
     private static Client client;
-
-    protected Client restClient() {
-        return client;
-    }
 
     @BeforeSuite
     public static void setup() {
@@ -34,11 +30,11 @@ public class JerseyHttpClientTest {
                 node.stop();
             }
         }); // just in case
-        JerseyHttpClientTest.node = node;
+        JerseyRestClientTest.node = node;
 
         final ExecutorService executor = Executors.newCachedThreadPool();
-        final Client client = JerseyHttpClientFactory.client(protocol, host, port, com.sun.jersey.api.client.Client.create(), executor);
-        JerseyHttpClientTest.client = client;
+        final Client client = JerseyRestClientFactory.client(protocol, host, port, com.sun.jersey.api.client.Client.create(), executor);
+        JerseyRestClientTest.client = client;
     }
 
     private static Node buildNode() {
@@ -52,11 +48,18 @@ public class JerseyHttpClientTest {
         nodeBuilder.settings().put("path.home", homeDirectory.getPath());
         nodeBuilder.settings().put("path.logs", new File(homeDirectory, "logs").getPath());
         nodeBuilder.settings().put("index.number_of_replicas", 0);
+        nodeBuilder.settings().put("script.disable_dynamic", false);
         return nodeBuilder.build();
     }
 
+    protected Client restClient() {
+        return client;
+    }
+
+    protected Client nodeClient() { return node.client();}
+
     @AfterSuite
     public void teardown() {
-        JerseyHttpClientTest.node.stop();
+        JerseyRestClientTest.node.stop();
     }
 }

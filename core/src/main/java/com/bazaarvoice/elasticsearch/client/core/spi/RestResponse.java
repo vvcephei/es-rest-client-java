@@ -9,7 +9,7 @@ import java.util.Set;
  * <p/>
  * Implementers can use any http client they like, configured however they want.
  */
-public interface HttpResponse {
+public interface RestResponse {
     public boolean isSuccess();
     public int statusCode();
     public InputStream response();

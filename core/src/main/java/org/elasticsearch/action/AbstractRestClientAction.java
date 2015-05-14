@@ -1,7 +1,7 @@
 package org.elasticsearch.action;
 
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpExecutor;
-import com.bazaarvoice.elasticsearch.client.core.spi.HttpResponse;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestExecutor;
+import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.util.concurrent.ListenableFuture;
 
@@ -16,10 +16,10 @@ public abstract class AbstractRestClientAction<Request, Response> {
     protected final String protocol;
     protected final String host;
     protected final int port;
-    protected final HttpExecutor executor;
-    protected final Function<HttpResponse, Response> responseTransform;
+    protected final RestExecutor executor;
+    protected final Function<RestResponse, Response> responseTransform;
 
-    public AbstractRestClientAction(final String protocol, final String host, final int port, final HttpExecutor executor, final Function<HttpResponse, Response> responseTransform) {
+    public AbstractRestClientAction(final String protocol, final String host, final int port, final RestExecutor executor, final Function<RestResponse, Response> responseTransform) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
