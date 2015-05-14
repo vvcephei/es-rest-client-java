@@ -18,7 +18,7 @@ See this issue for some background: https://github.com/elastic/elasticsearch/iss
 State and Goals
 -----
 
-![build status](https://travis-ci.org/vvcephei/es-client-java.svg?branch=master)
+[![build status](https://travis-ci.org/vvcephei/es-client-java.svg?branch=master)](https://travis-ci.org/vvcephei/es-client-java)
 
 It will take a while to implement the whole ES api, so I'm publicising the project with just a few methods implemented. I'm hoping to accomplish two things:
 
