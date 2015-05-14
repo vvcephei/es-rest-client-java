@@ -9,6 +9,7 @@ import org.elasticsearch.search.aggregations.bucket.children.ChildrenHelper;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterHelper;
 import org.elasticsearch.search.aggregations.bucket.filters.FiltersHelper;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalHelper;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramHelper;
 import org.elasticsearch.search.aggregations.bucket.histogram.HistogramHelper;
 import org.elasticsearch.search.aggregations.bucket.missing.MissingHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedHelper;
@@ -121,7 +122,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("histogram")) {
                 builder.add(HistogramHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("date_histogram")) {
-                throw new RuntimeException("not implemented");
+                builder.add(DateHistogramHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geo_distance")) {
                 throw new RuntimeException("not implemented");
             } else if (type.equals("geohash_grid")) {

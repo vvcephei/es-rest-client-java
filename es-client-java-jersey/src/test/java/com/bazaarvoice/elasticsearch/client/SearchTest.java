@@ -17,6 +17,7 @@ import org.elasticsearch.search.aggregations.bucket.children.Children;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
@@ -204,6 +205,8 @@ public class SearchTest extends JerseyRestClientTest {
         final String dateRangeAggName = "myDateRangeAgg";
         final String iPV4RangeAggName = "myIPv4RangeAgg";
         final String histogramAggName = "myHistogramAgg";
+        final String dateHistogramName = "myDateHistogramAgg";
+        final String dateHistogramName2 = "myDateHistogramAgg2";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -266,6 +269,8 @@ public class SearchTest extends JerseyRestClientTest {
             .addRange("10.0.0.100", "10.0.0.200")
             .addUnboundedFrom("10.0.0.200"));
         searchRequestBuilder.addAggregation(AggregationBuilders.histogram(histogramAggName).field("ifield").interval(1));
+        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramName).field("time").interval(1));
+        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramName2).field("time").interval(1).format("yyyy-MM-dd"));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -560,6 +565,22 @@ public class SearchTest extends JerseyRestClientTest {
             assertEquals(agg.getBuckets().size(), 1);
             assertEquals(agg.getBucketByKey(4).getDocCount(), 1);
             assertEquals(agg.getBucketByKey("4").getDocCount(), 1);
+        }
+
+        {
+            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramName);
+            assertEquals(agg.getBuckets().size(), 1);
+            assertEquals(agg.getBucketByKey(new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC)).getDocCount(), 1);
+            assertEquals(agg.getBucketByKey(1420257906007l).getDocCount(), 1);
+            assertEquals(agg.getBucketByKey("2015-01-03T04:05:06.007Z").getDocCount(), 1);
+        }
+
+        {
+            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramName2);
+            assertEquals(agg.getBuckets().size(), 1);
+            assertEquals(agg.getBucketByKey(new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC)).getDocCount(), 1);
+            assertEquals(agg.getBucketByKey(1420257906007l).getDocCount(), 1);
+            assertEquals(agg.getBucketByKey("2015-01-03").getDocCount(), 1);
         }
 
 
