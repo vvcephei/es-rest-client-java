@@ -17,6 +17,7 @@ import org.elasticsearch.search.aggregations.bucket.children.Children;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.filters.Filters;
 import org.elasticsearch.search.aggregations.bucket.global.Global;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.missing.Missing;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
@@ -202,6 +203,7 @@ public class SearchTest extends JerseyRestClientTest {
         final String rangeAggNameKeyed = "myRangeAgg2";
         final String dateRangeAggName = "myDateRangeAgg";
         final String iPV4RangeAggName = "myIPv4RangeAgg";
+        final String histogramAggName = "myHistogramAgg";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -263,7 +265,7 @@ public class SearchTest extends JerseyRestClientTest {
             .addUnboundedTo("10.0.0.100")
             .addRange("10.0.0.100", "10.0.0.200")
             .addUnboundedFrom("10.0.0.200"));
-
+        searchRequestBuilder.addAggregation(AggregationBuilders.histogram(histogramAggName).field("ifield").interval(1));
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -551,6 +553,13 @@ public class SearchTest extends JerseyRestClientTest {
                     assertEquals(bucket.getDocCount(), 0);
                 }
             }
+        }
+
+        {
+            final Histogram agg = typed(searchResponse.getAggregations()).getHistogram(histogramAggName);
+            assertEquals(agg.getBuckets().size(), 1);
+            assertEquals(agg.getBucketByKey(4).getDocCount(), 1);
+            assertEquals(agg.getBucketByKey("4").getDocCount(), 1);
         }
 
 
