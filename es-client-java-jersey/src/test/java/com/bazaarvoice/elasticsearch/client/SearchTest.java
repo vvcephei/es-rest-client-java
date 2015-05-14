@@ -24,6 +24,7 @@ import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNested;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRange;
+import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistance;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4Range;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -205,8 +206,9 @@ public class SearchTest extends JerseyRestClientTest {
         final String dateRangeAggName = "myDateRangeAgg";
         final String iPV4RangeAggName = "myIPv4RangeAgg";
         final String histogramAggName = "myHistogramAgg";
-        final String dateHistogramName = "myDateHistogramAgg";
-        final String dateHistogramName2 = "myDateHistogramAgg2";
+        final String dateHistogramAggName = "myDateHistogramAgg";
+        final String dateHistogramAggName2 = "myDateHistogramAgg2";
+        final String geoDistanceAggName = "myGeoDistanceAgg";
 
         SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX);
         searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
@@ -269,8 +271,18 @@ public class SearchTest extends JerseyRestClientTest {
             .addRange("10.0.0.100", "10.0.0.200")
             .addUnboundedFrom("10.0.0.200"));
         searchRequestBuilder.addAggregation(AggregationBuilders.histogram(histogramAggName).field("ifield").interval(1));
-        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramName).field("time").interval(1));
-        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramName2).field("time").interval(1).format("yyyy-MM-dd"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramAggName).field("time").interval(1));
+        searchRequestBuilder.addAggregation(AggregationBuilders.dateHistogram(dateHistogramAggName2).field("time").interval(1).format("yyyy-MM-dd"));
+        searchRequestBuilder.addAggregation(AggregationBuilders.geoDistance(geoDistanceAggName)
+            .field("location")
+            .point("40,-70")
+            .addUnboundedTo(100000)
+            .addRange(100000,200000)
+            .addRange(200000,300000)
+            .addRange(300000,400000)
+            .addRange(400000,500000)
+            .addUnboundedFrom(500000)
+        );
 
         ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
         SearchResponse searchResponse = execute2.actionGet();
@@ -568,7 +580,7 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramName);
+            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramAggName);
             assertEquals(agg.getBuckets().size(), 1);
             assertEquals(agg.getBucketByKey(new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC)).getDocCount(), 1);
             assertEquals(agg.getBucketByKey(1420257906007l).getDocCount(), 1);
@@ -576,11 +588,17 @@ public class SearchTest extends JerseyRestClientTest {
         }
 
         {
-            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramName2);
+            final DateHistogram agg = typed(searchResponse.getAggregations()).getDateHistogram(dateHistogramAggName2);
             assertEquals(agg.getBuckets().size(), 1);
             assertEquals(agg.getBucketByKey(new DateTime(2015, 1, 3, 4, 5, 6, 7, DateTimeZone.UTC)).getDocCount(), 1);
             assertEquals(agg.getBucketByKey(1420257906007l).getDocCount(), 1);
             assertEquals(agg.getBucketByKey("2015-01-03").getDocCount(), 1);
+        }
+
+        {
+            final GeoDistance agg = typed(searchResponse.getAggregations()).getGeoDistance(geoDistanceAggName);
+            assertEquals(agg.getBuckets().size(),6);
+            assertEquals(agg.getBucketByKey("100000.0-200000.0").getDocCount(), 1);
         }
 
 

@@ -16,6 +16,7 @@ import org.elasticsearch.search.aggregations.bucket.nested.NestedHelper;
 import org.elasticsearch.search.aggregations.bucket.nested.ReverseNestedHelper;
 import org.elasticsearch.search.aggregations.bucket.range.RangeHelper;
 import org.elasticsearch.search.aggregations.bucket.range.date.DateRangeHelper;
+import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistanceHelper;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4RangeBucketHelper;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IPv4RangeHelper;
 import org.elasticsearch.search.aggregations.bucket.significant.SignificantTermsHelper;
@@ -124,7 +125,7 @@ public class InternalAggregationsHelper {
             } else if (type.equals("date_histogram")) {
                 builder.add(DateHistogramHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geo_distance")) {
-                throw new RuntimeException("not implemented");
+                builder.add(GeoDistanceHelper.fromXContent(name, subAggregationMap, subAggregationsManifest));
             } else if (type.equals("geohash_grid")) {
                 throw new RuntimeException("not implemented");
             } else {
