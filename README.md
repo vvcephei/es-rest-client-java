@@ -22,10 +22,8 @@ State and Goals
 
 It will take a while to implement the whole ES api, so I'm publicising the project with just a few methods implemented. I'm hoping to accomplish two things:
 
-1. Get some feedback on the approach and implementation. I've just hacked several things out to just get something working. Please give me your feedback
-   on how to do things idiomatically (or even correctly, if I've really hosed it up).
-2. Elicit some help in implementing the methods you care about. I feel that Get, Index, Deletes, and Search will cover the majority of use cases, so we should start with these,
-   but if you need something else done, I'd love to help you do it.
+1. Get some feedback on the approach and implementation. I've just hacked several things out to just get something working. Please give me your feedback on how to do things idiomatically (or even correctly, if I've really hosed it up).
+2. Elicit some help in implementing the methods you care about. I feel that Get, Index, Deletes, and Search will cover the majority of use cases, so we should start with these, but if you need something else done, I'd love to help you do it.
 
 I want to make sure that if a method is implemented, it is correct. So the stuff in org.elasticsearch.action should not make any awkward compromises.
 Even if the whole client doesn't make it into the main ES repo, I think this stuff may belong there (alongside the actual REST endpoints).
@@ -35,12 +33,13 @@ Implemented:
 * get
 * index
 * delete
-* search (but several parts of search objects are not serialized in the API and cannot be inferred, so they are not implemented. Notable: aggregations is entirely unimplemented)
+* search (some minor parts of search objects are not serialized in the API and cannot be inferred, so they are not implemented. They are clearly marked in the code with FIXMEs, and I'll fix them later with PRs to ES. They really are minor, so I don't think you'll be bitten by them.)
 
 
 |Version|Notes|
 |-------|-----|
-|7.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
+|0.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
+|0.1PRE2|Search is fully implemented (including aggregations). The client is still a single-node client: See #4.|
 
 ### RestExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
