@@ -39,7 +39,7 @@ Implemented:
 |Version|Notes|
 |-------|-----|
 |0.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
-|0.1PRE2|Search is fully implemented (including aggregations). The client is still a single-node client: See #4.|
+|0.1PRE2|Search is fully implemented (including aggregations). The client is still a single-node client: See [Issue #4](https://github.com/vvcephei/es-client-java/issues/4).|
 
 ### RestExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
