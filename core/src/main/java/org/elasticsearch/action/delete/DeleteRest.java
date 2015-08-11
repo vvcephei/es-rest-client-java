@@ -14,6 +14,7 @@ import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.rep
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.timeValueToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.versionTypeToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.writeConsistencyLevelToString;
+import static com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder.urlEncode;
 import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
@@ -31,7 +32,9 @@ public class DeleteRest<ResponseType> extends AbstractRestClientAction<DeleteReq
     @Override public ListenableFuture<ResponseType> act(final DeleteRequest request) {
         UrlBuilder url = UrlBuilder.create()
             .protocol(protocol).host(host).port(port)
-            .path(notNull(request.index())).seg(notNull(request.type())).seg(notNull(request.id()))
+            .path(urlEncode(notNull(request.index())))
+            .seg(urlEncode(notNull(request.type())))
+            .seg(urlEncode(notNull(request.id())))
             .paramIfPresent("routing", fromNullable(request.routing()))
                 // note parent(string) seems just to set the routing, so we don't need to provide it here
             .paramIfPresent("timeout", fromNullable(request.timeout()).transform(timeValueToString))

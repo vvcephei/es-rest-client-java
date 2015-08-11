@@ -10,11 +10,13 @@ import org.elasticsearch.common.util.concurrent.ListenableFuture;
 
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.booleanToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.commaDelimitedToString;
+import static com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder.urlEncode;
 import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
 /**
  * The inverse of {@link org.elasticsearch.rest.action.get.RestGetAction}
+ *
  * @param <ResponseType>
  */
 public class GetRest<ResponseType> extends AbstractRestClientAction<GetRequest, ResponseType> {
@@ -25,7 +27,9 @@ public class GetRest<ResponseType> extends AbstractRestClientAction<GetRequest, 
     @Override public ListenableFuture<ResponseType> act(GetRequest request) {
         UrlBuilder url = UrlBuilder.create()
             .protocol(protocol).host(host).port(port)
-            .path(notNull(request.index())).seg(notNull(request.type())).seg(notNull(request.id()))
+            .path(urlEncode(notNull(request.index())))
+            .seg(urlEncode(notNull(request.type())))
+            .seg(urlEncode(notNull(request.id())))
             .paramIfPresent("refresh", fromNullable(request.refresh()).transform(booleanToString))
             .paramIfPresent("routing", fromNullable(request.routing()))
                 // note parent(string) seems just to set the routing, so we don't need to provide it here

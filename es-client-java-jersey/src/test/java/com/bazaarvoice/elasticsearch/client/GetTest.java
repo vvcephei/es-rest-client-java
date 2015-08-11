@@ -11,19 +11,38 @@ import static org.testng.Assert.assertTrue;
 
 public class GetTest extends JerseyRestClientTest {
 
-    public static final String ID = "get-test-id-1";
+    private final String index = "get-test-idx";
+    private final String type = "get-test-type";
 
     @Test public void testGet() {
-        final IndexRequestBuilder indexRequestBuilder = restClient().prepareIndex("testidx", "testtype", ID).setSource("field", "value").setRefresh(true);
+        final String id = "get-test-id-1";
+        final IndexRequestBuilder indexRequestBuilder = restClient().prepareIndex(index, type, id).setSource("field", "value").setRefresh(true);
         indexRequestBuilder.execute().actionGet();
 
 
-        final GetRequestBuilder getRequestBuilder = restClient().prepareGet("testidx", "testtype", ID);
+        final GetRequestBuilder getRequestBuilder = restClient().prepareGet(index, type, id);
         final ListenableActionFuture<GetResponse> execute1 = getRequestBuilder.execute();
         final GetResponse get = execute1.actionGet();
-        assertEquals(get.getIndex(), "testidx");
-        assertEquals(get.getType(), "testtype");
-        assertEquals(get.getId(), ID);
+        assertEquals(get.getIndex(), index);
+        assertEquals(get.getType(), type);
+        assertEquals(get.getId(), id);
+        assertEquals(get.getVersion(), 1);
+        assertTrue(get.getFields().isEmpty());
+        assertEquals(get.getSource().get("field"), "value");
+    }
+
+    @Test public void testGetSlash() {
+        final String id = "get-test/id-2";
+        final IndexRequestBuilder indexRequestBuilder = restClient().prepareIndex(index, type, id).setSource("field", "value").setRefresh(true);
+        indexRequestBuilder.execute().actionGet();
+
+
+        final GetRequestBuilder getRequestBuilder = restClient().prepareGet(index, type, id);
+        final ListenableActionFuture<GetResponse> execute1 = getRequestBuilder.execute();
+        final GetResponse get = execute1.actionGet();
+        assertEquals(get.getIndex(), index);
+        assertEquals(get.getType(), type);
+        assertEquals(get.getId(), id);
         assertEquals(get.getVersion(), 1);
         assertTrue(get.getFields().isEmpty());
         assertEquals(get.getSource().get("field"), "value");

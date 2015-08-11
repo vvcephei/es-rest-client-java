@@ -3,10 +3,12 @@ package org.elasticsearch.action;
 import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.InputStreams;
 import org.elasticsearch.common.base.Function;
+import org.elasticsearch.common.base.Joiner;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.common.xcontent.smile.SmileXContent;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -29,12 +31,14 @@ public class XContentResponseTransform<R> implements Function<RestResponse, R> {
         try {
             //TODO check REST status and "ok" field and handle failure
             final Map<String, Object> map;
-            if (restResponse.contentTypeLowerCase().contains("application/smile")) {
+            final String contentTypes = Joiner.on(",").join(restResponse.contentTypeLowerCase());
+            if (contentTypes.contains("application/smile")) {
                 map = SmileXContent.smileXContent.createParser(restResponse.response()).mapAndClose();
+            } else if (contentTypes.contains("application/json")) {
+                final InputStream is = InputStreams.stripNullChars(restResponse.response());
+                map = JsonXContent.jsonXContent.createParser(is).mapAndClose();
             } else {
-                // assume json?
-                // not sure why we sometimes get a bunch of 0x0 chars in the response?
-                map = JsonXContent.jsonXContent.createParser(InputStreams.stripNullChars(restResponse.response())).mapAndClose();
+                throw new RuntimeException(String.format("Could not parse response. Content-Type:[%s] Body:[%s]", restResponse.contentTypeLowerCase(), InputStreams.toString(InputStreams.stripNullChars(restResponse.response()))));
             }
             if (map.containsKey("error")) {
                 // FIXME use the right exception. see https://github.com/bazaarvoice/es-client-java/issues/3

@@ -17,12 +17,14 @@ import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.rep
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.timeValueToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.versionTypeToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.writeConsistencyLevelToString;
+import static com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder.urlEncode;
 import static com.bazaarvoice.elasticsearch.client.core.util.Validation.notNull;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 import static org.elasticsearch.common.base.Optional.of;
 
 /**
  * The inverse of {@link org.elasticsearch.rest.action.index.RestIndexAction}
+ *
  * @param <ResponseType>
  */
 public class IndexRest<ResponseType> extends AbstractRestClientAction<IndexRequest, ResponseType> {
@@ -33,7 +35,8 @@ public class IndexRest<ResponseType> extends AbstractRestClientAction<IndexReque
     @Override public ListenableFuture<ResponseType> act(IndexRequest request) {
         UrlBuilder url = UrlBuilder.create()
             .protocol(protocol).host(host).port(port)
-            .path(notNull(request.index())).seg(notNull(request.type()))
+            .path(urlEncode(notNull(request.index())))
+            .seg(urlEncode(notNull(request.type())))
             .paramIfPresent("routing", fromNullable(request.routing()))
             .paramIfPresent("parent", fromNullable(request.parent()))
             .paramIfPresent("timestamp", fromNullable(request.timestamp()))
@@ -52,7 +55,7 @@ public class IndexRest<ResponseType> extends AbstractRestClientAction<IndexReque
             // auto id creation
             return Futures.transform(executor.post(url.url(), InputStreams.of(request.safeSource())), responseTransform);
         } else {
-            return Futures.transform(executor.put(url.seg(request.id()).url(), InputStreams.of(request.safeSource())), responseTransform);
+            return Futures.transform(executor.put(url.seg(urlEncode(request.id())).url(), InputStreams.of(request.safeSource())), responseTransform);
         }
     }
 }

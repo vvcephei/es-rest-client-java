@@ -12,6 +12,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.booleanToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.scrollToString;
 import static com.bazaarvoice.elasticsearch.client.core.util.StringFunctions.searchTypeToString;
+import static com.bazaarvoice.elasticsearch.client.core.util.UrlBuilder.urlEncodeAll;
 import static org.elasticsearch.common.base.Optional.fromNullable;
 
 /**
@@ -36,11 +37,11 @@ public class SearchRest {
         if (request.indices() == null || request.indices().length == 0) {
             url = url.path("_search");
         } else {
-            String indices = Joiner.on(',').skipNulls().join(request.indices());
+            String indices = Joiner.on(',').skipNulls().join(urlEncodeAll(request.indices()));
             if (request.types() == null || request.types().length == 0) {
                 url = url.path(indices, "_search");
             } else if (request.types() == null || request.types().length == 0) {
-                String types = Joiner.on(',').skipNulls().join(request.types());
+                String types = Joiner.on(',').skipNulls().join(urlEncodeAll(request.types()));
                 url = url.path(indices, types, "_search");
             }
         }
