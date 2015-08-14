@@ -40,7 +40,7 @@ public class SearchRest {
             String indices = Joiner.on(',').skipNulls().join(urlEncodeAll(request.indices()));
             if (request.types() == null || request.types().length == 0) {
                 url = url.path(indices, "_search");
-            } else if (request.types() == null || request.types().length == 0) {
+            } else {
                 String types = Joiner.on(',').skipNulls().join(urlEncodeAll(request.types()));
                 url = url.path(indices, types, "_search");
             }
