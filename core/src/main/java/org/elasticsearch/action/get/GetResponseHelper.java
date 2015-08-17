@@ -10,7 +10,7 @@ import org.elasticsearch.index.get.GetResult;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeBytesReferenceValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeBytesReferenceForMapValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeStringValue;
@@ -37,13 +37,14 @@ public class GetResponseHelper implements FromXContent<GetResponse> {
             fields = ImmutableMap.of();
         }
 
+        //noinspection unchecked
         return new GetResponse(new GetResult(
             nodeStringValue(map.get("_index")),
             nodeStringValue(map.get("_type")),
             nodeStringValue(map.get("_id")),
             nodeLongValue(map.get("_version"), -1),
             nodeBooleanValue(map.get("found"), true),
-            nodeBytesReferenceValue(map.get("_source")),
+            nodeBytesReferenceForMapValue((Map<String, ?>) map.get("_source")),
             fields
         ));
     }

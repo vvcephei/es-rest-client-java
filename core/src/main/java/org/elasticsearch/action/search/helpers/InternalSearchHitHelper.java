@@ -15,7 +15,7 @@ import org.elasticsearch.search.internal.InternalSearchHitField;
 import java.util.List;
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeBytesReferenceValue;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeBytesReferenceForMapValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeFloatValue;
@@ -46,7 +46,7 @@ public class InternalSearchHitHelper {
         String id = nodeStringValue(map.get("_id"), null);
         long version = nodeLongValue(map.get("_version"), -1);
         float score = nodeFloatValue(map.get("_score"), Float.NaN);
-        BytesReference source = nodeBytesReferenceValue(map.get("_source"));
+        @SuppressWarnings("unchecked") BytesReference source = nodeBytesReferenceForMapValue((Map<String, ?>) map.get("_source"));
         final int docId = -1; // this field isn't serialized
         ImmutableMap.Builder<String, SearchHitField> fields = ImmutableMap.builder();
         if (map.containsKey("fields")) {

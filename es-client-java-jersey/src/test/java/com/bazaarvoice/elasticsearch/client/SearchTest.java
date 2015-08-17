@@ -645,6 +645,7 @@ public class SearchTest extends JerseyRestClientTest {
             /* ignoring, unserialized...*/
             System.out.println("source: " + Objects.toString(hit.getSourceAsString()));
             assertEquals(hit.getSource().get("field"), "value");
+            assertEquals(((List<Map<String,?>>)hit.getSource().get("things")).get(0).get("field"), "nested");
             assertNull(hit.explanation());
             assertTrue(hit.getFields().isEmpty());
             assertTrue(hit.getHighlightFields().isEmpty());

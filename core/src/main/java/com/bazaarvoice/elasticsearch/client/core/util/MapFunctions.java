@@ -3,9 +3,10 @@ package com.bazaarvoice.elasticsearch.client.core.util;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Preconditions;
-import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.base.Throwables;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.jackson.core.util.ByteArrayBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentGenerator;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.common.xcontent.smile.SmileXContent;
@@ -76,62 +77,16 @@ public class MapFunctions {
         }
     }
 
-    public static BytesReference nodeBytesReferenceValue(final @Nullable Object o) {
+    // assumption: _source is always a map
+    public static BytesReference nodeBytesReferenceForMapValue(final @Nullable Map<String, ?> o) {
         if (o == null) {
             return null;
         } else {
-            return new BytesArray(readRaw(o));
-        }
-    }
-
-    public static BytesRef nodeBytesRefValue(final @Nullable Object o) {
-        if (o == null) {
-            return null;
-        } else {
-            return new BytesRef(readRaw(o));
-        }
-    }
-
-    //TODO test this. also is this really my best option?
-    private static byte[] readRaw(final Object source) {
-        ByteArrayBuilder byteArrayBuilder = new ByteArrayBuilder();
-        try {
-            XContentGenerator generator = JsonXContent.jsonXContent.createGenerator(byteArrayBuilder);
-            if (source == null) {
-                generator.writeNull();
-            } else if (source instanceof Boolean) {
-                generator.writeBoolean((Boolean) source);
-            } else if (source instanceof Number) {
-                if (source instanceof Double) {
-                    generator.writeNumber((Double) source);
-                } else if (source instanceof Float) {
-                    generator.writeNumber((Float) source);
-                } else if (source instanceof Integer) {
-                    generator.writeNumber((Integer) source);
-                } else if (source instanceof Long) { generator.writeNumber((Long) source); } else {
-                    throw new IllegalStateException(String.format("unexpected numeric type %s of %s", source.getClass(), source));
-                }
-            } else if (source instanceof String) {
-                generator.writeString((String) source);
-            } else if (source instanceof List) {
-                List<Object> objects = nodeListValue(source, Object.class);
-                generator.writeStartArray();
-                for (Object o : objects) {
-                    generator.writeBinary(readRaw(o));
-                }
-                generator.writeEndArray();
-            } else if (source instanceof Map) {
-                Map<String, Object> map = nodeMapValue(source, String.class, Object.class);
-                generator.writeStartObject();
-                for (Map.Entry<String, Object> entry : map.entrySet()) {
-                    generator.writeRawField(entry.getKey(), readRaw(entry.getValue()), byteArrayBuilder);
-                }
-                generator.writeEndObject();
+            try {
+                return XContentFactory.jsonBuilder().map(o).bytes();
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
             }
-            generator.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-        return byteArrayBuilder.toByteArray();
     }
 }
