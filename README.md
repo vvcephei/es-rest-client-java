@@ -41,7 +41,7 @@ Implemented:
 |0.1PRE1|Just an initial peek at the project. Get, Index, Delete, and Search (with the exception of aggregations) are implemented. The client is created just for a single node.|
 |0.1PRE2|Search is fully implemented (including aggregations). The client is still a single-node client: See [Issue #4](https://github.com/vvcephei/es-client-java/issues/4).|
 |0.1PRE3|<ul><li>bugfix related to properly urlencoding the index,type, and id in requests</li><li>bugfix related to properly formatting exceptions recieved from the api</li></ul>|
-|0.1PRE4 (not yet released)|<ul><li>bugfix related to setting the type in search requests</li><li>bugfix related to converting the _source map to a BytesReference</li></ul>|
+|0.1PRE4 (not yet released)|<ul><li>bugfix related to setting the type in search requests</li><li>bugfix related to converting the _source map to a BytesReference</li><li>bugfix for npe in safe cast to list</li></ul>|
 
 ### RestExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
