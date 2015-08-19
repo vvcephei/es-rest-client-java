@@ -14,6 +14,7 @@ import org.elasticsearch.common.xcontent.smile.SmileXContent;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A few functions I needed similar to, but missing from,
@@ -37,7 +38,7 @@ public class MapFunctions {
         if (o instanceof String) {
             return (String) o;
         } else {
-            return o.toString();
+            return Objects.toString(o);
         }
     }
 
@@ -45,7 +46,7 @@ public class MapFunctions {
         Preconditions.checkNotNull(o);
         if (o instanceof List) {
             for (Object elem : (List) o) {
-                if (!contains.isAssignableFrom(elem.getClass())) {
+                if (elem != null && !contains.isAssignableFrom(elem.getClass())) {
                     throw new IllegalArgumentException(String.format("%s was expected to be a %s but was a %s", elem, contains.getCanonicalName(), elem.getClass().getCanonicalName()));
                 }
             }
