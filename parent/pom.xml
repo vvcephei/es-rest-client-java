@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.bazaarvoice.elasticsearch.client</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>es-rest-client-parent</artifactId>
     <version>0.1PRE4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -21,93 +21,6 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-
-    <properties>
-        <elasticsearch.version>1.4.4</elasticsearch.version>
-        <slf4j.version>1.7.4</slf4j.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- ES -->
-            <dependency>
-                <groupId>org.elasticsearch</groupId>
-                <artifactId>elasticsearch</artifactId>
-                <version>${elasticsearch.version}</version>
-            </dependency>
-
-            <!-- Logging -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jul-to-slf4j</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>log4j-over-slf4j</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-nop</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-
-            <!-- testing -->
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>1.9.0</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>6.5.2</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.github.rest-driver</groupId>
-                <artifactId>rest-client-driver</artifactId>
-                <version>1.1.33</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
-                <version>2.3.5</version>
-                <type>jar</type>
-                <scope>test</scope>
-            </dependency>
-
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <pluginManagement>

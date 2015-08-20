@@ -5,14 +5,14 @@
 
     <parent>
     <groupId>com.bazaarvoice.elasticsearch.client</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>es-rest-client-parent-1.4</artifactId>
     <version>0.1PRE4-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>es-client-java-aggregations-support</artifactId>
+    <artifactId>es-rest-client-aggregations-support-1.4</artifactId>
     <packaging>jar</packaging>
-    <name>ES Client Aggregations Support</name>
+    <name>ES 1.4 Rest Client Aggregations Support</name>
 
     <dependencies>
         <dependency>

@@ -5,14 +5,14 @@
 
     <parent>
         <groupId>com.bazaarvoice.elasticsearch.client</groupId>
-        <artifactId>parent</artifactId>
+        <artifactId>es-rest-client-parent-1.4</artifactId>
         <version>0.1PRE4-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>es-client-java-jersey</artifactId>
+    <artifactId>es-rest-client-jersey-1.4</artifactId>
     <packaging>jar</packaging>
-    <name>ES Jersey Client</name>
+    <name>ES 1.4 Jersey Rest Client</name>
 
     <properties>
         <jersey-client.version>1.17.1</jersey-client.version>
@@ -20,12 +20,12 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>es-client-java-core</artifactId>
+            <artifactId>es-rest-client-core-1.4</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>es-client-java-aggregations-support</artifactId>
+            <artifactId>es-rest-client-aggregations-support-1.4</artifactId>
             <version>${project.version}</version>
         </dependency>
 
