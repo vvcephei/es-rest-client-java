@@ -8,7 +8,7 @@
         <artifactId>bv-opensource-super-pom</artifactId>
         <version>1.3</version>
         <relativePath/>gs
-        
+
     </parent>
 
     <groupId>com.bazaarvoice.elasticsearch.client</groupId>
