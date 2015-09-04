@@ -4,6 +4,7 @@ import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.action.FromXContent;
 import org.elasticsearch.action.search.helpers.InternalSearchResponseHelper;
 import org.elasticsearch.common.Preconditions;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.xcontent.ToXContent.Params;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.rest.RestStatus;
@@ -11,10 +12,9 @@ import org.elasticsearch.search.SearchShardTarget;
 
 import java.util.Map;
 
-import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.toMap;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeListValue;
 import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.nodeMapValue;
-import static org.elasticsearch.common.base.Preconditions.checkState;
+import static com.bazaarvoice.elasticsearch.client.core.util.MapFunctions.toMap;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeIntegerValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeLongValue;
 import static org.elasticsearch.common.xcontent.support.XContentMapValues.nodeStringValue;
@@ -33,6 +33,8 @@ public class SearchResponseHelper implements FromXContent<SearchResponse> {
             aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggregations"), String.class, Object.class));
         } else if (source.containsKey("aggs")) {
             aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggs"), String.class, Object.class));
+        } else if (source.containsKey("aggregations_binary")) {
+            aggregationsManifest = AggregationsManifest.fromSource(toMap(new BytesArray((byte[]) source.get("aggregations_binary"))));
         } else {
             aggregationsManifest = null;
         }

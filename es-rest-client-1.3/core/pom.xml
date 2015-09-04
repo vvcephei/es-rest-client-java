@@ -25,8 +25,6 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
         </dependency>
-
-
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

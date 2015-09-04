@@ -4,6 +4,7 @@ import com.bazaarvoice.elasticsearch.client.core.util.aggs.AggregationsManifest;
 import org.elasticsearch.action.FromXContent;
 import org.elasticsearch.action.search.helpers.InternalSearchResponseHelper;
 import org.elasticsearch.common.Preconditions;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.xcontent.ToXContent.Params;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.rest.RestStatus;
@@ -33,6 +34,8 @@ public class SearchResponseHelper implements FromXContent<SearchResponse> {
             aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggregations"), String.class, Object.class));
         } else if (source.containsKey("aggs")) {
             aggregationsManifest = AggregationsManifest.fromSource(nodeMapValue(source.get("aggs"), String.class, Object.class));
+        } else if (source.containsKey("aggregations_binary")) {
+            aggregationsManifest = AggregationsManifest.fromSource(toMap(new BytesArray((byte[]) source.get("aggregations_binary"))));
         } else {
             aggregationsManifest = null;
         }

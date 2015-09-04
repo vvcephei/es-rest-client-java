@@ -12,7 +12,7 @@ import java.io.StringWriter;
  */
 public class InputStreams {
     public static InputStream of(BytesReference bytes) {
-        return new ByteArrayInputStream(bytes.array());
+        return new ByteArrayInputStream(bytes.toBytes());
     }
 
     /** useful for debugging */

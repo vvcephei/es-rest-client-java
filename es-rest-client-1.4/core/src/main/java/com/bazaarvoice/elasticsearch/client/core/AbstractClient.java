@@ -76,7 +76,6 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
 
@@ -99,6 +98,9 @@ import org.elasticsearch.threadpool.ThreadPool;
  * matters, so they will throw an UnsupportedOperationException
  */
 public abstract class AbstractClient implements Client {
+
+    ThreadPool threadPool = null;
+
     @Override public ActionFuture<IndexResponse> index(final IndexRequest request) {
         PlainActionFuture<IndexResponse> future = new PlainActionFuture<IndexResponse>();
         index(request, future);
@@ -369,8 +371,10 @@ public abstract class AbstractClient implements Client {
 
     @Override public ThreadPool threadPool() {
         // TODO flesh out client
-        final ThreadPool dummyThreadPool = new ThreadPool("dummy");
-        return dummyThreadPool;
+        if(this.threadPool == null) {
+            this.threadPool = new ThreadPool("dummy");
+        }
+        return this.threadPool;
     }
 
     private class NotImplementedException extends RuntimeException {}
