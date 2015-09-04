@@ -65,6 +65,7 @@ public class InternalSearchHitHelper {
             }
         }
         InternalSearchHit internalSearchHit = new InternalSearchHit(docId, id, type, fields.build());
+        internalSearchHit.score(score);
         internalSearchHit.sourceRef(source);
 
         internalSearchHit.shardTarget(searchShardTarget);
