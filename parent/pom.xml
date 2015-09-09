@@ -11,7 +11,7 @@
 
     <groupId>com.bazaarvoice.elasticsearch.client</groupId>
     <artifactId>es-rest-client-parent</artifactId>
-    <version>0.1PRE5-SNAPSHOT</version>
+    <version>0.1PRE5</version>
     <packaging>pom</packaging>
 
     <licenses>
@@ -38,4 +38,8 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <tag>es-client-java-complete-0.1PRE5</tag>
+  </scm>
 </project>
