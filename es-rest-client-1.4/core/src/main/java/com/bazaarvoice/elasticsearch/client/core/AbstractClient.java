@@ -1,5 +1,6 @@
 package com.bazaarvoice.elasticsearch.client.core;
 
+import org.elasticsearch.Version;
 import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
@@ -76,8 +77,19 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.compress.CompressorFactory;
+import org.elasticsearch.common.inject.Injector;
+import org.elasticsearch.common.inject.ModulesBuilder;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.settings.SettingsModule;
+import org.elasticsearch.env.Environment;
+import org.elasticsearch.node.internal.InternalSettingsPreparer;
+import org.elasticsearch.plugins.PluginsService;
 import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.threadpool.ThreadPoolModule;
+
+import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 
 /**
  * The ES client interface provides multiple options for calling each logical method.
@@ -99,7 +111,31 @@ import org.elasticsearch.threadpool.ThreadPool;
  */
 public abstract class AbstractClient implements Client {
 
-    ThreadPool threadPool = null;
+    private final Environment environment;
+    private final PluginsService pluginsService;
+    private final Settings settings;
+    private final Injector injector;
+
+    protected AbstractClient(Settings pSettings, boolean loadConfigSettings) {
+        Tuple<Settings, Environment> tuple = InternalSettingsPreparer.prepareSettings(pSettings, loadConfigSettings);
+        Settings settings = settingsBuilder().put(tuple.v1())
+            .put("network.server", false)
+            .put("node.client", true)
+            .build();
+        this.environment = tuple.v2();
+        this.pluginsService = new PluginsService(settings, tuple.v2());
+        this.settings = pluginsService.updatedSettings();
+
+        Version version = Version.CURRENT;
+
+        CompressorFactory.configure(this.settings);
+
+        ModulesBuilder modules = new ModulesBuilder();
+        modules.add(new SettingsModule(this.settings));
+        modules.add(new ThreadPoolModule(this.settings));
+
+        this.injector = modules.createInjector();
+    }
 
     @Override public ActionFuture<IndexResponse> index(final IndexRequest request) {
         PlainActionFuture<IndexResponse> future = new PlainActionFuture<IndexResponse>();
@@ -365,17 +401,10 @@ public abstract class AbstractClient implements Client {
     }
 
     @Override public Settings settings() {
-        // TODO flesh out client
-        throw new NotImplementedException();
+        return settings;
     }
 
     @Override public ThreadPool threadPool() {
-        // TODO flesh out client
-        if(this.threadPool == null) {
-            this.threadPool = new ThreadPool("dummy");
-        }
-        return this.threadPool;
+        return injector.getInstance(ThreadPool.class);
     }
-
-    private class NotImplementedException extends RuntimeException {}
 }

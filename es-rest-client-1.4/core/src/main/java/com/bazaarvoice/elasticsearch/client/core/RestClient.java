@@ -56,6 +56,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.util.concurrent.Futures;
 
 import static org.elasticsearch.action.NotifyingCallback.callback;
@@ -81,6 +82,7 @@ public class RestClient extends AbstractClient implements Client {
     }
 
     private RestClient(final String protocol, final String host, final int port, final RestExecutor executor) {
+        super(ImmutableSettings.EMPTY,true);
         indexRest = new IndexRest<IndexResponse>(protocol, host, port, executor, new XContentResponseTransform<IndexResponse>(new IndexResponseHelper()));
         getRest = new GetRest<GetResponse>(protocol, host, port, executor, new XContentResponseTransform<GetResponse>(new GetResponseHelper()));
         deleteRest = new DeleteRest<DeleteResponse>(protocol, host, port, executor, new XContentResponseTransform<DeleteResponse>(new DeleteResponseHelper()));
