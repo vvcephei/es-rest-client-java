@@ -2,6 +2,7 @@ package org.elasticsearch.action;
 
 import com.bazaarvoice.elasticsearch.client.core.spi.RestResponse;
 import com.bazaarvoice.elasticsearch.client.core.util.InputStreams;
+import org.elasticsearch.ElasticSearchExceptionHelper;
 import org.elasticsearch.common.base.Function;
 import org.elasticsearch.common.base.Joiner;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -40,12 +41,14 @@ public class XContentResponseTransform<R> implements Function<RestResponse, R> {
             } else {
                 throw new RuntimeException(String.format("Could not parse response. Content-Type:[%s] Body:[%s]", restResponse.contentTypeLowerCase(), InputStreams.toString(InputStreams.stripNullChars(restResponse.response()))));
             }
+
+            // If there was an error throw the proper exception
             if (map.containsKey("error")) {
-                // FIXME use the right exception. see https://github.com/bazaarvoice/es-client-java/issues/3
-                throw new RuntimeException("Some kind of error: " + map.toString());
+                throw ElasticSearchExceptionHelper.getProperException(map);
             }
 
             return unmarshaller.fromXContent(map);
+
         } catch (IOException e) {
             // FIXME: which exception to use? It should match ES clients if possible. see https://github.com/bazaarvoice/es-client-java/issues/3
             throw new RuntimeException(e);

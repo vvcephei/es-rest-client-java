@@ -11,6 +11,7 @@ import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.Filter;
@@ -57,11 +58,11 @@ import static org.elasticsearch.common.Preconditions.checkState;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.reverseNested;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.significantTerms;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
-import static org.junit.Assert.fail;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class SearchTest extends JerseyRestClientTest {
 
@@ -168,6 +169,19 @@ public class SearchTest extends JerseyRestClientTest {
             builder.put((K) objs[i], (V) objs[i + 1]);
         }
         return builder.build();
+    }
+
+    @Test
+    public void testSearch_IndexMissingException() {
+        SearchRequestBuilder searchRequestBuilder = restClient().prepareSearch(INDEX + "nosuch");
+        searchRequestBuilder.setQuery(QueryBuilders.termQuery("field", "value"));
+        ListenableActionFuture<SearchResponse> execute2 = searchRequestBuilder.execute();
+        try {
+            execute2.actionGet();
+            fail("Expected an IndexMissingException");
+        } catch (IndexMissingException e) {
+            assertEquals(e.index().getName(), INDEX+"nosuch");
+        }
     }
 
     @Test public void testSearch() {
