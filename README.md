@@ -42,6 +42,7 @@ Implemented:
 |0.1PRE2|Search is fully implemented (including aggregations). The client is still a single-node client: See [Issue #4](https://github.com/vvcephei/es-client-java/issues/4).|
 |0.1PRE3|<ul><li>bugfix related to properly urlencoding the index,type, and id in requests</li><li>bugfix related to properly formatting exceptions recieved from the api</li></ul>|
 |0.1PRE4|<ul><li>bugfix related to setting the type in search requests</li><li>bugfix related to converting the _source map to a BytesReference</li><li>bugfix for npe in safe cast to list</li><li>cross-build the client across ES 1.4 and ES 1.3</li><li>rename the artifacts to `es-rest-client-$COMPONENT-$ES_VERSION`</li></ul>|
+|0.1PRE5|<ul><li>bugfix: no handling for aggregations_binary</li><li>various small bugs fixed deserializing response</li><li>switched to using ThreadPool module to create threadpool for async client responses</li></ul>|
 
 ### RestExecutor?
 As far as the actual client goes, I feel that the ES client should not configure its own Http client. There are a lot of choices and configurations for Java HTTP clients,
