@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bazaarvoice.elasticsearch.client</groupId>
         <artifactId>es-rest-client-parent</artifactId>
-        <version>0.1PRE6-SNAPSHOT</version>
+        <version>0.1PRE6</version>
         <relativePath>./parent/pom.xml</relativePath>
     </parent>
 
@@ -24,7 +24,7 @@
         <url>http://github.com/vvcephei/es-client-java</url>
         <connection>scm:git:git@github.com:vvcephei/es-client-java.git</connection>
         <developerConnection>scm:git:git@github.com:vvcephei/es-client-java.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>es-client-java-complete-0.1PRE6</tag>
     </scm>
 
     <modules>
